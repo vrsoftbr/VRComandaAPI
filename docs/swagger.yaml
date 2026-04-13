@@ -1,0 +1,449 @@
+basePath: /
+definitions:
+  lancamento.CreateItemRequest:
+    properties:
+      codigobarras:
+        type: string
+      id_atendente:
+        type: integer
+      id_lancamentocomanda:
+        type: integer
+      id_produto:
+        type: integer
+      id_situacao:
+        type: integer
+      precovenda:
+        type: number
+      quantidade:
+        type: number
+      sequencia:
+        type: integer
+    required:
+    - id_atendente
+    - id_lancamentocomanda
+    - id_produto
+    - quantidade
+    - sequencia
+    type: object
+  lancamento.CreateItemsRequest:
+    properties:
+      itens:
+        items:
+          $ref: '#/definitions/lancamento.CreateItemRequest'
+        minItems: 1
+        type: array
+    required:
+    - itens
+    type: object
+  lancamento.CreateLancamentoRequest:
+    properties:
+      dataHora:
+        type: string
+      finalizado:
+        type: boolean
+      id_atendente:
+        type: integer
+      id_comanda:
+        type: integer
+      id_loja:
+        type: integer
+      id_mesa:
+        type: integer
+      observacao:
+        type: string
+    type: object
+  lancamento.UpdateItemRequest:
+    properties:
+      cancelado:
+        type: boolean
+      quantidade:
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API backend para operacao de comandas.
+  title: VRComandaAPI
+  version: "1.0"
+paths:
+  /atendentes:
+    get:
+      parameters:
+      - description: ID da loja
+        in: query
+        name: id_loja
+        type: integer
+      - description: Codigo
+        in: query
+        name: codigo
+        type: string
+      - description: Nome
+        in: query
+        name: nome
+        type: string
+      - description: Ativo
+        in: query
+        name: ativo
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar atendentes
+      tags:
+      - Atendente
+  /comandas:
+    get:
+      parameters:
+      - description: ID da loja
+        in: query
+        name: id_loja
+        type: integer
+      - description: Numero da comanda
+        in: query
+        name: comanda
+        type: integer
+      - description: Numero de identificacao
+        in: query
+        name: numero_identificacao
+        type: string
+      - description: Ativo
+        in: query
+        name: ativo
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar comandas
+      tags:
+      - Comanda
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check
+      tags:
+      - Health
+  /lancamentos:
+    get:
+      parameters:
+      - description: ID comanda
+        in: query
+        name: id_comanda
+        type: integer
+      - description: ID mesa
+        in: query
+        name: id_mesa
+        type: integer
+      - description: ID atendente
+        in: query
+        name: id_atendente
+        type: integer
+      - description: DataHora
+        in: query
+        name: dataHora
+        type: string
+      - description: Finalizado
+        in: query
+        name: finalizado
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar lancamentos
+      tags:
+      - Lancamento
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Lancamento
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/lancamento.CreateLancamentoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Criar lancamento
+      tags:
+      - Lancamento
+  /lancamentos/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Lancamento
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/lancamento.CreateLancamentoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Editar lancamento
+      tags:
+      - Lancamento
+  /lancamentos/itens:
+    get:
+      parameters:
+      - description: ID comanda
+        in: query
+        name: id_comanda
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar itens por comanda
+      tags:
+      - Lancamento
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Itens
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/lancamento.CreateItemsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Criar itens de lancamento em lote
+      tags:
+      - Lancamento
+  /lancamentos/itens/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Item
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/lancamento.UpdateItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Editar item de lancamento
+      tags:
+      - Lancamento
+  /mesas:
+    get:
+      parameters:
+      - description: ID da loja
+        in: query
+        name: id_loja
+        type: integer
+      - description: Numero da mesa
+        in: query
+        name: mesa
+        type: integer
+      - description: Ativo
+        in: query
+        name: ativo
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar mesas
+      tags:
+      - Mesa
+schemes:
+- http
+swagger: "2.0"
