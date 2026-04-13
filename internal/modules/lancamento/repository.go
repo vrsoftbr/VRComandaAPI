@@ -16,7 +16,6 @@ type Repository interface {
 	Update(ctx context.Context, model *models.LancamentoComanda) error
 	List(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error)
 	ListItensByComanda(ctx context.Context, idComanda int) ([]ItemComandaRow, error)
-	CreateItem(ctx context.Context, item *models.LancamentoComandaItem) error
 	CreateItemsBatch(ctx context.Context, items []*models.LancamentoComandaItem) error
 	SequenciaExistsInLancamento(ctx context.Context, idLancamento uint, sequencia int) (bool, error)
 	FindItemByID(ctx context.Context, id uint) (*models.LancamentoComandaItem, error)
@@ -76,10 +75,6 @@ func (r *repository) FindByID(ctx context.Context, id uint) (*models.LancamentoC
 
 func (r *repository) Update(ctx context.Context, model *models.LancamentoComanda) error {
 	return r.db.WithContext(ctx).Save(model).Error
-}
-
-func (r *repository) CreateItem(ctx context.Context, item *models.LancamentoComandaItem) error {
-	return r.db.WithContext(ctx).Create(item).Error
 }
 
 func (r *repository) CreateItemsBatch(ctx context.Context, items []*models.LancamentoComandaItem) error {

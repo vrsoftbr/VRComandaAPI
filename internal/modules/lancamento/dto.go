@@ -48,7 +48,7 @@ type CreateLancamentoRequest struct {
 	IDAtendente int    `json:"id_atendente"`
 	DataHora    string `json:"dataHora"`
 	Observacao  string `json:"observacao"`
-	Finalizado  *bool  `json:"finalizado"` //
+	Finalizado  *bool  `json:"finalizado"`
 }
 
 type ListLancamentosRequest struct {
