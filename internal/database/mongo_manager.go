@@ -21,6 +21,16 @@ type MongoManager struct {
 	db  *mongo.Database
 }
 
+var connectMongoFn = ConnectMongo
+
+var pingMongoFn = func(ctx context.Context, db *mongo.Database) error {
+	return db.Client().Ping(ctx, readpref.Primary())
+}
+
+var disconnectMongoFn = func(ctx context.Context, db *mongo.Database) error {
+	return db.Client().Disconnect(ctx)
+}
+
 // NewMongoManager creates a new manager. Call Start to begin connection attempts.
 func NewMongoManager(cfg config.Config) *MongoManager {
 	return &MongoManager{cfg: cfg}
@@ -43,7 +53,7 @@ func (m *MongoManager) InvalidateConnection() {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	_ = m.db.Client().Disconnect(ctx)
+	_ = disconnectMongoFn(ctx, m.db)
 	cancel()
 
 	m.db = nil
@@ -79,7 +89,7 @@ func (m *MongoManager) isConnected() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	if err := db.Client().Ping(ctx, readpref.Primary()); err != nil {
+	if err := pingMongoFn(ctx, db); err != nil {
 		return false
 	}
 
@@ -89,7 +99,7 @@ func (m *MongoManager) isConnected() bool {
 // connect opens a new MongoDB connection and stores the handle.
 // Logs a warning on failure without affecting the running application.
 func (m *MongoManager) connect() {
-	db, err := ConnectMongo(m.cfg)
+	db, err := connectMongoFn(m.cfg)
 	if err != nil {
 		slog.Warn("MongoDB indisponivel", "erro", err)
 		return
@@ -98,7 +108,7 @@ func (m *MongoManager) connect() {
 	m.mu.Lock()
 	if m.db != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		_ = m.db.Client().Disconnect(ctx)
+		_ = disconnectMongoFn(ctx, m.db)
 		cancel()
 	}
 	m.db = db

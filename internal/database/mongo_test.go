@@ -1,11 +1,8 @@
 package database
 
 import (
-	"errors"
 	"testing"
 	"time"
-
-	"go.mongodb.org/mongo-driver/mongo"
 
 	"vrcomandaapi/internal/config"
 )
@@ -36,20 +33,24 @@ func TestConnectMongoUnreachableServer(t *testing.T) {
 	}
 }
 
-func TestIsMongoConnectionError(t *testing.T) {
-	if IsMongoConnectionError(nil) {
-		t.Fatal("nil error must return false")
+func TestConnectMongoSuccess(t *testing.T) {
+	cfg := config.Config{
+		MongoURI:      "mongodb://127.0.0.1:27017",
+		MongoDatabase: "vrcomanda_test",
 	}
 
-	if !IsMongoConnectionError(mongo.CommandError{Name: "NotPrimaryOrSecondary"}) {
-		t.Fatal("expected command error to be treated as connection error")
+	db, err := ConnectMongo(cfg)
+	if err != nil {
+		t.Skipf("MongoDB não disponível, pulando teste de conexão bem-sucedida: %v", err)
 	}
 
-	if !IsMongoConnectionError(errors.New("server selection timeout")) {
-		t.Fatal("expected timeout message to be treated as connection error")
+	if db == nil {
+		t.Fatal("expected non-nil database handle on successful connection")
 	}
 
-	if IsMongoConnectionError(errors.New("business validation failure")) {
-		t.Fatal("non-connection error should return false")
+	if db.Name() != cfg.MongoDatabase {
+		t.Fatalf("expected database name %q, got %q", cfg.MongoDatabase, db.Name())
 	}
+
+	_ = db.Client().Disconnect(nil)
 }

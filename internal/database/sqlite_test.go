@@ -40,6 +40,23 @@ func TestEnsureSQLiteDirFailsWhenParentIsFile(t *testing.T) {
 	}
 }
 
+func TestConnectSQLiteEnsureDirError(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatalf("failed creating fixture file: %v", err)
+	}
+
+	cfg := config.Config{SQLitePath: filepath.Join(blocker, "db.sqlite")}
+	db, err := ConnectSQLite(cfg)
+	if err == nil {
+		t.Fatal("expected ConnectSQLite to return error when dir cannot be created")
+	}
+	if db != nil {
+		t.Fatal("expected nil db on error")
+	}
+}
+
 func TestConnectSQLiteSuccess(t *testing.T) {
 	cfg := config.Config{SQLitePath: ":memory:"}
 
