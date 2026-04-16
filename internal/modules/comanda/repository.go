@@ -14,6 +14,8 @@ type Repository interface {
 	List(ctx context.Context, filter ListComandasFilter) ([]Comanda, error)
 }
 
+var findAllComandasFn = database.FindAll[Comanda]
+
 type mongoRepository struct {
 	getDatabase          func() *mongo.Database
 	invalidateConnection func()
@@ -35,9 +37,6 @@ func (r *mongoRepository) collection() *mongo.Collection {
 
 func (r *mongoRepository) List(ctx context.Context, filter ListComandasFilter) ([]Comanda, error) {
 	collection := r.collection()
-	if collection == nil {
-		return []Comanda{}, nil
-	}
 
 	query := bson.M{}
 	if filter.IDLoja != 0 {
@@ -53,26 +52,6 @@ func (r *mongoRepository) List(ctx context.Context, filter ListComandasFilter) (
 		query["ativo"] = *filter.Ativo
 	}
 
-	cursor, err := collection.Find(ctx, query, options.Find().SetSort(bson.M{"comanda": 1}))
-	if err != nil {
-		if database.IsMongoConnectionError(err) {
-			r.invalidateConnection()
-		}
-		return []Comanda{}, nil
-	}
-	defer cursor.Close(ctx)
-
-	var result []Comanda
-	if err := cursor.All(ctx, &result); err != nil {
-		if database.IsMongoConnectionError(err) {
-			r.invalidateConnection()
-		}
-		return []Comanda{}, nil
-	}
-
-	if result == nil {
-		return []Comanda{}, nil
-	}
-
-	return result, nil
+	findOptions := options.Find().SetSort(bson.M{"comanda": 1})
+	return findAllComandasFn(ctx, collection, query, findOptions, r.invalidateConnection)
 }

@@ -18,54 +18,6 @@ func NewHandler(service Service) *Handler {
 	return &Handler{service: service}
 }
 
-// Update godoc
-// @Summary Editar lancamento
-// @Tags Lancamento
-// @Accept json
-// @Produce json
-// @Param id path int true "ID"
-// @Param body body CreateLancamentoRequest true "Lancamento"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
-// @Failure 409 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
-// @Router /lancamentos/{id} [put]
-func (h *Handler) Update(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		utils.RespondError(c, http.StatusBadRequest, "id invalido")
-		return
-	}
-
-	var req CreateLancamentoRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.RespondError(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	result, err := h.service.Update(c.Request.Context(), uint(id), req)
-	if err != nil {
-		if errors.Is(err, ErrValidation) {
-			utils.RespondError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		if errors.Is(err, ErrDuplicateLancamento) {
-			utils.RespondError(c, http.StatusConflict, err.Error())
-			return
-		}
-		if errors.Is(err, ErrNotFound) {
-			utils.RespondError(c, http.StatusNotFound, err.Error())
-			return
-		}
-		utils.RespondError(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.RespondOK(c, http.StatusOK, result)
-}
-
 // CreateItem godoc
 // @Summary Criar itens de lancamento em lote
 // @Tags Lancamento
@@ -221,6 +173,54 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	utils.RespondOK(c, http.StatusCreated, result)
+}
+
+// Update godoc
+// @Summary Editar lancamento
+// @Tags Lancamento
+// @Accept json
+// @Produce json
+// @Param id path int true "ID"
+// @Param body body CreateLancamentoRequest true "Lancamento"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 409 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /lancamentos/{id} [put]
+func (h *Handler) Update(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		utils.RespondError(c, http.StatusBadRequest, "id invalido")
+		return
+	}
+
+	var req CreateLancamentoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.service.Update(c.Request.Context(), uint(id), req)
+	if err != nil {
+		if errors.Is(err, ErrValidation) {
+			utils.RespondError(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, ErrDuplicateLancamento) {
+			utils.RespondError(c, http.StatusConflict, err.Error())
+			return
+		}
+		if errors.Is(err, ErrNotFound) {
+			utils.RespondError(c, http.StatusNotFound, err.Error())
+			return
+		}
+		utils.RespondError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondOK(c, http.StatusOK, result)
 }
 
 // List godoc

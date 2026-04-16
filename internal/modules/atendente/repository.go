@@ -15,6 +15,8 @@ type Repository interface {
 	List(ctx context.Context, filter ListAtendentesFilter) ([]Atendente, error)
 }
 
+var findAllAtendentesFn = database.FindAll[Atendente]
+
 type mongoRepository struct {
 	getDatabase          func() *mongo.Database
 	invalidateConnection func()
@@ -36,9 +38,6 @@ func (r *mongoRepository) collection() *mongo.Collection {
 
 func (r *mongoRepository) List(ctx context.Context, filter ListAtendentesFilter) ([]Atendente, error) {
 	collection := r.collection()
-	if collection == nil {
-		return []Atendente{}, nil
-	}
 
 	query := bson.M{}
 	if filter.IDLoja != 0 {
@@ -55,26 +54,6 @@ func (r *mongoRepository) List(ctx context.Context, filter ListAtendentesFilter)
 		query["ativo"] = *filter.Ativo
 	}
 
-	cursor, err := collection.Find(ctx, query, options.Find().SetSort(bson.M{"nome": 1}))
-	if err != nil {
-		if database.IsMongoConnectionError(err) {
-			r.invalidateConnection()
-		}
-		return []Atendente{}, nil
-	}
-	defer cursor.Close(ctx)
-
-	var result []Atendente
-	if err := cursor.All(ctx, &result); err != nil {
-		if database.IsMongoConnectionError(err) {
-			r.invalidateConnection()
-		}
-		return []Atendente{}, nil
-	}
-
-	if result == nil {
-		return []Atendente{}, nil
-	}
-
-	return result, nil
+	findOptions := options.Find().SetSort(bson.M{"nome": 1})
+	return findAllAtendentesFn(ctx, collection, query, findOptions, r.invalidateConnection)
 }

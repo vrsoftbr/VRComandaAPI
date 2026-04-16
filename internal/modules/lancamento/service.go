@@ -39,25 +39,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) Create(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error) {
-	if req.IDLoja <= 0 {
-		return nil, fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
-	}
-	if req.IDComanda <= 0 {
-		return nil, fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
-	}
-	if req.IDAtendente <= 0 {
-		return nil, fmt.Errorf("%w: id_atendente e obrigatorio", ErrValidation)
-	}
-	if req.Finalizado == nil {
-		return nil, fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
-	}
-	if strings.TrimSpace(req.DataHora) == "" {
-		return nil, fmt.Errorf("%w: dataHora e obrigatorio", ErrValidation)
-	}
-
-	dataHora, err := parseDataHora(req.DataHora)
+	dataHora, err := validateCreateLancamentoRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: dataHora invalida", ErrValidation)
+		return nil, err
 	}
 
 	if !*req.Finalizado {
@@ -70,15 +54,8 @@ func (s *service) Create(ctx context.Context, req CreateLancamentoRequest) (*mod
 		}
 	}
 
-	model := &models.LancamentoComanda{
-		IDLoja:      req.IDLoja,
-		IDComanda:   req.IDComanda,
-		IDMesa:      req.IDMesa,
-		IDAtendente: req.IDAtendente,
-		DataHora:    dataHora,
-		Observacao:  strings.TrimSpace(req.Observacao),
-		Finalizado:  *req.Finalizado,
-	}
+	model := &models.LancamentoComanda{}
+	applyLancamentoRequest(model, req, dataHora)
 
 	if err := s.repo.Create(ctx, model); err != nil {
 		return nil, err
@@ -130,25 +107,9 @@ func (s *service) List(ctx context.Context, req ListLancamentosRequest) ([]model
 }
 
 func (s *service) Update(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error) {
-	if req.IDLoja <= 0 {
-		return nil, fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
-	}
-	if req.IDComanda <= 0 {
-		return nil, fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
-	}
-	if req.IDAtendente <= 0 {
-		return nil, fmt.Errorf("%w: id_atendente e obrigatorio", ErrValidation)
-	}
-	if req.Finalizado == nil {
-		return nil, fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
-	}
-	if strings.TrimSpace(req.DataHora) == "" {
-		return nil, fmt.Errorf("%w: dataHora e obrigatorio", ErrValidation)
-	}
-
-	dataHora, err := parseDataHora(req.DataHora)
+	dataHora, err := validateCreateLancamentoRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: dataHora invalida", ErrValidation)
+		return nil, err
 	}
 
 	model, err := s.repo.FindByID(ctx, id)
@@ -173,13 +134,7 @@ func (s *service) Update(ctx context.Context, id uint, req CreateLancamentoReque
 		}
 	}
 
-	model.IDLoja = req.IDLoja
-	model.IDComanda = req.IDComanda
-	model.IDMesa = req.IDMesa
-	model.IDAtendente = req.IDAtendente
-	model.DataHora = dataHora
-	model.Observacao = strings.TrimSpace(req.Observacao)
-	model.Finalizado = *req.Finalizado
+	applyLancamentoRequest(model, req, dataHora)
 
 	if err := s.repo.Update(ctx, model); err != nil {
 		return nil, err
@@ -332,4 +287,39 @@ func parseDataHora(input string) (time.Time, error) {
 		}
 	}
 	return time.Time{}, errors.New("dataHora invalida")
+}
+
+func validateCreateLancamentoRequest(req CreateLancamentoRequest) (time.Time, error) {
+	if req.IDLoja <= 0 {
+		return time.Time{}, fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
+	}
+	if req.IDComanda <= 0 {
+		return time.Time{}, fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
+	}
+	if req.IDAtendente <= 0 {
+		return time.Time{}, fmt.Errorf("%w: id_atendente e obrigatorio", ErrValidation)
+	}
+	if req.Finalizado == nil {
+		return time.Time{}, fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
+	}
+	if strings.TrimSpace(req.DataHora) == "" {
+		return time.Time{}, fmt.Errorf("%w: dataHora e obrigatorio", ErrValidation)
+	}
+
+	dataHora, err := parseDataHora(req.DataHora)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("%w: dataHora invalida", ErrValidation)
+	}
+
+	return dataHora, nil
+}
+
+func applyLancamentoRequest(model *models.LancamentoComanda, req CreateLancamentoRequest, dataHora time.Time) {
+	model.IDLoja = req.IDLoja
+	model.IDComanda = req.IDComanda
+	model.IDMesa = req.IDMesa
+	model.IDAtendente = req.IDAtendente
+	model.DataHora = dataHora
+	model.Observacao = strings.TrimSpace(req.Observacao)
+	model.Finalizado = *req.Finalizado
 }
