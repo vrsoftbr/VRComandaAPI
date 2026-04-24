@@ -182,19 +182,7 @@ func TestServiceCreate(t *testing.T) {
 func TestServiceList(t *testing.T) {
 	t.Run("invalid filters", func(t *testing.T) {
 		svc := NewService(repositoryStub{})
-		_, err := svc.List(context.Background(), ListLancamentosRequest{IDComanda: "x"})
-		if !errors.Is(err, ErrInvalidFilter) {
-			t.Fatalf("expected ErrInvalidFilter for IDComanda, got %v", err)
-		}
-		_, err = svc.List(context.Background(), ListLancamentosRequest{IDMesa: "x"})
-		if !errors.Is(err, ErrInvalidFilter) {
-			t.Fatalf("expected ErrInvalidFilter for IDMesa, got %v", err)
-		}
-		_, err = svc.List(context.Background(), ListLancamentosRequest{IDAtendente: "x"})
-		if !errors.Is(err, ErrInvalidFilter) {
-			t.Fatalf("expected ErrInvalidFilter for IDAtendente, got %v", err)
-		}
-		_, err = svc.List(context.Background(), ListLancamentosRequest{DataHora: "x"})
+		_, err := svc.List(context.Background(), ListLancamentosRequest{DataHora: "x"})
 		if !errors.Is(err, ErrInvalidFilter) {
 			t.Fatalf("expected ErrInvalidFilter for DataHora, got %v", err)
 		}
@@ -207,7 +195,7 @@ func TestServiceList(t *testing.T) {
 			called++
 			return nil, repoErr
 		}})
-		_, err := svcErr.List(context.Background(), ListLancamentosRequest{IDComanda: "10"})
+		_, err := svcErr.List(context.Background(), ListLancamentosRequest{IDComanda: 10})
 		if !errors.Is(err, repoErr) || called != 1 {
 			t.Fatalf("expected repo error once, got err=%v called=%d", err, called)
 		}
@@ -218,11 +206,11 @@ func TestServiceList(t *testing.T) {
 			return []models.LancamentoComanda{{ID: 1}}, nil
 		}})
 		finalizado := true
-		result, err := svcOK.List(context.Background(), ListLancamentosRequest{IDComanda: "1", IDMesa: "2", IDAtendente: "3", DataHora: "2026-01-02", Finalizado: &finalizado})
+		result, err := svcOK.List(context.Background(), ListLancamentosRequest{IDLoja: 5, IDComanda: 1, IDMesa: 2, IDAtendente: 3, DataHora: "2026-01-02", Finalizado: &finalizado})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(result) != 1 || captured.IDComanda == nil || *captured.IDComanda != 1 || captured.IDMesa == nil || *captured.IDMesa != 2 || captured.IDAtendente == nil || *captured.IDAtendente != 3 || captured.DataHora == nil || captured.Finalizado == nil || *captured.Finalizado != true {
+		if len(result) != 1 || captured.IDLoja == nil || *captured.IDLoja != 5 || captured.IDComanda == nil || *captured.IDComanda != 1 || captured.IDMesa == nil || *captured.IDMesa != 2 || captured.IDAtendente == nil || *captured.IDAtendente != 3 || captured.DataHora == nil || captured.Finalizado == nil || *captured.Finalizado != true {
 			t.Fatalf("unexpected captured filter/result: %+v %+v", captured, result)
 		}
 	})
@@ -563,11 +551,8 @@ func TestServiceUpdateItem(t *testing.T) {
 
 func TestServiceListItens(t *testing.T) {
 	t.Run("invalid id_comanda", func(t *testing.T) {
-		svc := NewService(repositoryStub{})
-		_, err := svc.ListItens(context.Background(), ListItensRequest{IDComanda: "abc"})
-		if !errors.Is(err, ErrInvalidFilter) {
-			t.Fatalf("expected ErrInvalidFilter, got %v", err)
-		}
+		// With int type, invalid values are rejected at the binding/query-parse layer;
+		// the service accepts any int directly, so this test is removed.
 	})
 
 	t.Run("repository error and mapping success", func(t *testing.T) {
@@ -575,7 +560,7 @@ func TestServiceListItens(t *testing.T) {
 		svcErr := NewService(repositoryStub{listItensByComandaFn: func(_ context.Context, _ int) ([]ItemComandaRow, error) {
 			return nil, repoErr
 		}})
-		_, err := svcErr.ListItens(context.Background(), ListItensRequest{IDComanda: "1"})
+		_, err := svcErr.ListItens(context.Background(), ListItensRequest{IDComanda: 1})
 		if !errors.Is(err, repoErr) {
 			t.Fatalf("expected repo error, got %v", err)
 		}
@@ -588,7 +573,7 @@ func TestServiceListItens(t *testing.T) {
 			return []ItemComandaRow{{LancamentoComandaItem: models.LancamentoComandaItem{ID: 7, IDLancamentoComanda: 8, Sequencia: 1, IDProduto: 2, CodigoBarras: "123", Quantidade: 3, PrecoVenda: 9.5, Cancelado: true, DataHoraCancelamento: &now, IDAtendente: 4, IDSituacao: 5}, IDComanda: 99}}, nil
 		}})
 
-		result, err := svcOK.ListItens(context.Background(), ListItensRequest{IDComanda: "1"})
+		result, err := svcOK.ListItens(context.Background(), ListItensRequest{IDComanda: 1})
 		if err != nil || len(result) != 1 || result[0].ID != 7 || result[0].IDComanda != 99 {
 			t.Fatalf("unexpected list itens result: %+v err=%v", result, err)
 		}

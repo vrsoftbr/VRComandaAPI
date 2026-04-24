@@ -128,8 +128,15 @@ func (r *repository) ListItensByComanda(ctx context.Context, idComanda int) ([]I
 }
 
 func (r *repository) List(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error) {
-	query := r.db.WithContext(ctx).Model(&models.LancamentoComanda{})
+	query := r.db.WithContext(ctx).
+		Model(&models.LancamentoComanda{}).
+		Preload("Itens", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sequencia")
+		})
 
+	if filter.IDLoja != nil {
+		query = query.Where("id_loja = ?", *filter.IDLoja)
+	}
 	if filter.IDComanda != nil {
 		query = query.Where("id_comanda = ?", *filter.IDComanda)
 	}

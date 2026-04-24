@@ -84,3 +84,37 @@ func TestMongoRepositoryListWithEmptyFilter(t *testing.T) {
 		t.Fatalf("expected empty result, got len=%d", len(result))
 	}
 }
+
+func TestMongoRepositoryListBuildsBatchComandasQuery(t *testing.T) {
+	defer resetFindAllComandasFn()
+
+	var capturedFilter interface{}
+	findAllComandasFn = func(_ context.Context, _ *mongo.Collection, filter interface{}, _ *options.FindOptions, _ func()) ([]Comanda, error) {
+		capturedFilter = filter
+		return []Comanda{}, nil
+	}
+
+	repo := &mongoRepository{
+		getDatabase:          func() *mongo.Database { return nil },
+		invalidateConnection: func() {},
+		collectionName:       "comandas",
+	}
+
+	_, err := repo.List(context.Background(), ListComandasFilter{Comandas: []int{7, 9}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := capturedFilter.(bson.M)
+	if !ok {
+		t.Fatalf("expected bson.M filter, got %T", capturedFilter)
+	}
+	inFilter, ok := query["comanda"].(bson.M)
+	if !ok {
+		t.Fatalf("expected bson.M comanda filter, got %T", query["comanda"])
+	}
+	values, ok := inFilter["$in"].([]int)
+	if !ok || len(values) != 2 || values[0] != 7 || values[1] != 9 {
+		t.Fatalf("unexpected $in values: %+v", inFilter["$in"])
+	}
+}

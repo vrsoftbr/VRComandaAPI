@@ -105,6 +105,17 @@ func TestRepositoryExistsMethodsReturnErrorWithoutTables(t *testing.T) {
 func TestRepositoryUpdateAndList(t *testing.T) {
 	repo := newRepositoryForTest(t, true)
 	model := seedLancamento(t, repo, 2, 20, false)
+	if err := repo.CreateItemsBatch(context.Background(), []*models.LancamentoComandaItem{{
+		IDLancamentoComanda: model.ID,
+		Sequencia:           1,
+		IDProduto:           99,
+		Quantidade:          1,
+		PrecoVenda:          10,
+		IDAtendente:         1,
+		IDSituacao:          1,
+	}}); err != nil {
+		t.Fatalf("unexpected CreateItemsBatch error: %v", err)
+	}
 	idMesa := 5
 	model.IDMesa = &idMesa
 	model.Observacao = "updated"
@@ -115,9 +126,11 @@ func TestRepositoryUpdateAndList(t *testing.T) {
 	}
 
 	idComanda := 20
+	idLoja := 2
 	idAtendente := 1
 	finalizado := true
 	result, err := repo.List(context.Background(), ListLancamentosFilter{
+		IDLoja:      &idLoja,
 		IDComanda:   &idComanda,
 		IDMesa:      &idMesa,
 		IDAtendente: &idAtendente,
@@ -129,6 +142,9 @@ func TestRepositoryUpdateAndList(t *testing.T) {
 	}
 	if len(result) != 1 || result[0].Observacao != "updated" {
 		t.Fatalf("unexpected list result: %+v", result)
+	}
+	if len(result[0].Itens) != 1 || result[0].Itens[0].IDProduto != 99 {
+		t.Fatalf("expected linked itens in list result, got: %+v", result[0].Itens)
 	}
 }
 

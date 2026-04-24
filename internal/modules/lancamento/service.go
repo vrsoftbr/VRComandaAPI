@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -67,27 +66,23 @@ func (s *service) Create(ctx context.Context, req CreateLancamentoRequest) (*mod
 func (s *service) List(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 	filter := ListLancamentosFilter{}
 
-	if req.IDComanda != "" {
-		v, err := strconv.Atoi(req.IDComanda)
-		if err != nil {
-			return nil, fmt.Errorf("%w: id_comanda deve ser inteiro", ErrInvalidFilter)
-		}
+	if req.IDLoja != 0 {
+		v := req.IDLoja
+		filter.IDLoja = &v
+	}
+
+	if req.IDComanda != 0 {
+		v := req.IDComanda
 		filter.IDComanda = &v
 	}
 
-	if req.IDMesa != "" {
-		v, err := strconv.Atoi(req.IDMesa)
-		if err != nil {
-			return nil, fmt.Errorf("%w: id_mesa deve ser inteiro", ErrInvalidFilter)
-		}
+	if req.IDMesa != 0 {
+		v := req.IDMesa
 		filter.IDMesa = &v
 	}
 
-	if req.IDAtendente != "" {
-		v, err := strconv.Atoi(req.IDAtendente)
-		if err != nil {
-			return nil, fmt.Errorf("%w: id_atendente deve ser inteiro", ErrInvalidFilter)
-		}
+	if req.IDAtendente != 0 {
+		v := req.IDAtendente
 		filter.IDAtendente = &v
 	}
 
@@ -248,12 +243,7 @@ func (s *service) UpdateItem(ctx context.Context, id uint, req UpdateItemRequest
 }
 
 func (s *service) ListItens(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error) {
-	idComanda, err := strconv.Atoi(req.IDComanda)
-	if err != nil {
-		return nil, fmt.Errorf("%w: id_comanda deve ser inteiro", ErrInvalidFilter)
-	}
-
-	rows, err := s.repo.ListItensByComanda(ctx, idComanda)
+	rows, err := s.repo.ListItensByComanda(ctx, req.IDComanda)
 	if err != nil {
 		return nil, err
 	}

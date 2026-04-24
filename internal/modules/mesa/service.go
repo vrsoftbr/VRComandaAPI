@@ -20,6 +20,7 @@ func (s *service) List(ctx context.Context, req ListMesasRequest) ([]MesaRespons
 	filter := ListMesasFilter{
 		IDLoja: req.IDLoja,
 		Mesa:   req.Mesa,
+		Mesas:  req.Mesas,
 	}
 
 	if req.Ativo != nil {

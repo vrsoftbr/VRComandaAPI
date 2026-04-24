@@ -3,7 +3,7 @@ package lancamento
 import "time"
 
 type ListItensRequest struct {
-	IDComanda string `form:"id_comanda" binding:"required"`
+	IDComanda int `form:"id_comanda" binding:"required"`
 }
 
 type ItemComandaResponse struct {
@@ -52,14 +52,16 @@ type CreateLancamentoRequest struct {
 }
 
 type ListLancamentosRequest struct {
-	IDComanda   string `form:"id_comanda"`
-	IDMesa      string `form:"id_mesa"`
-	IDAtendente string `form:"id_atendente"`
+	IDComanda   int    `form:"id_comanda"`
+	IDLoja      int    `form:"id_loja"`
+	IDMesa      int    `form:"id_mesa"`
+	IDAtendente int    `form:"id_atendente"`
 	DataHora    string `form:"dataHora"`
 	Finalizado  *bool  `form:"finalizado"`
 }
 
 type ListLancamentosFilter struct {
+	IDLoja      *int
 	IDComanda   *int
 	IDMesa      *int
 	IDAtendente *int

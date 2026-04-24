@@ -38,6 +38,7 @@ func TestServiceListBuildsFilterAndMapsResponse(t *testing.T) {
 	result, err := svc.List(context.Background(), ListMesasRequest{
 		IDLoja: 20,
 		Mesa:   8,
+		Mesas:  []int{8, 9},
 		Ativo:  &ativo,
 	})
 	if err != nil {
@@ -67,6 +68,28 @@ func TestServiceListDoesNotSetAtivoWhenNil(t *testing.T) {
 	}
 	if capturedFilter.Ativo != nil {
 		t.Fatalf("expected nil ativo in filter, got %+v", capturedFilter.Ativo)
+	}
+	if len(capturedFilter.Mesas) != 0 {
+		t.Fatalf("expected empty mesas in filter, got %+v", capturedFilter.Mesas)
+	}
+}
+
+func TestServiceListPassesBatchMesas(t *testing.T) {
+	var capturedFilter ListMesasFilter
+	repo := repositoryStub{
+		listFn: func(_ context.Context, filter ListMesasFilter) ([]Mesa, error) {
+			capturedFilter = filter
+			return []Mesa{}, nil
+		},
+	}
+
+	svc := NewService(repo)
+	_, err := svc.List(context.Background(), ListMesasRequest{Mesas: []int{4, 6}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(capturedFilter.Mesas) != 2 || capturedFilter.Mesas[0] != 4 || capturedFilter.Mesas[1] != 6 {
+		t.Fatalf("unexpected mesas filter: %+v", capturedFilter.Mesas)
 	}
 }
 

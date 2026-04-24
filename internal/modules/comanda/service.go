@@ -20,6 +20,7 @@ func (s *service) List(ctx context.Context, req ListComandasRequest) ([]ComandaR
 	filter := ListComandasFilter{
 		IDLoja:              req.IDLoja,
 		Comanda:             req.Comanda,
+		Comandas:            req.Comandas,
 		NumeroIdentificacao: req.NumeroIdentificacao,
 	}
 

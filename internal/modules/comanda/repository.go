@@ -45,6 +45,9 @@ func (r *mongoRepository) List(ctx context.Context, filter ListComandasFilter) (
 	if filter.Comanda != 0 {
 		query["comanda"] = filter.Comanda
 	}
+	if len(filter.Comandas) > 0 {
+		query["comanda"] = bson.M{"$in": filter.Comandas}
+	}
 	if filter.NumeroIdentificacao != "" {
 		query["numeroIdentificacao"] = filter.NumeroIdentificacao
 	}

@@ -578,8 +578,8 @@ func TestHandlerListItens(t *testing.T) {
 
 	t.Run("returns 200 on success", func(t *testing.T) {
 		r := newRouter(serviceStub{listItensFn: func(_ context.Context, req ListItensRequest) ([]ItemComandaResponse, error) {
-			if req.IDComanda != "5" {
-				t.Fatalf("unexpected id_comanda: %s", req.IDComanda)
+			if req.IDComanda != 5 {
+				t.Fatalf("unexpected id_comanda: %d", req.IDComanda)
 			}
 			return []ItemComandaResponse{{ID: 1}}, nil
 		}})

@@ -3,6 +3,7 @@ package comanda
 type ListComandasRequest struct {
 	IDLoja              int    `form:"idLoja"`
 	Comanda             int    `form:"comanda"`
+	Comandas            []int  `form:"comandas"`
 	NumeroIdentificacao string `form:"numeroIdentificacao"`
 	Ativo               *bool  `form:"ativo"`
 }
@@ -19,6 +20,7 @@ type ComandaResponse struct {
 type ListComandasFilter struct {
 	IDLoja              int
 	Comanda             int
+	Comandas            []int
 	NumeroIdentificacao string
 	Ativo               *bool
 }

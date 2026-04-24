@@ -18,6 +18,7 @@ import (
 	"vrcomandaapi/internal/database"
 	"vrcomandaapi/internal/modules/atendente"
 	"vrcomandaapi/internal/modules/comanda"
+	"vrcomandaapi/internal/modules/global"
 	"vrcomandaapi/internal/modules/lancamento"
 	"vrcomandaapi/internal/modules/mesa"
 	"vrcomandaapi/internal/shared/middleware"
@@ -80,6 +81,13 @@ func bootstrap() (*gin.Engine, error) {
 	atendente.RegisterRoutes(router, mongoManager.DB, mongoManager.InvalidateConnection)
 
 	lancamento.RegisterRoutes(router, sqliteDB)
+
+	global.RegisterRoutes(
+		router,
+		lancamento.NewService(lancamento.NewRepository(sqliteDB)),
+		comanda.NewService(comanda.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "comandas")),
+		mesa.NewService(mesa.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "mesas")),
+	)
 
 	return router, nil
 }

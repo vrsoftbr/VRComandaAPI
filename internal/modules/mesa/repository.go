@@ -45,6 +45,9 @@ func (r *mongoRepository) List(ctx context.Context, filter ListMesasFilter) ([]M
 	if filter.Mesa != 0 {
 		query["mesa"] = filter.Mesa
 	}
+	if len(filter.Mesas) > 0 {
+		query["mesa"] = bson.M{"$in": filter.Mesas}
+	}
 	if filter.Ativo != nil {
 		query["ativo"] = *filter.Ativo
 	}

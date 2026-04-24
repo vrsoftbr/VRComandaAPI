@@ -227,10 +227,11 @@ func (h *Handler) Update(c *gin.Context) {
 // @Summary Listar lancamentos
 // @Tags Lancamento
 // @Produce json
+// @Param id_loja query int false "ID loja"
 // @Param id_comanda query int false "ID comanda"
 // @Param id_mesa query int false "ID mesa"
 // @Param id_atendente query int false "ID atendente"
-// @Param dataHora query string false "DataHora"
+// @Param dataHora query string false "Data e hora (RFC3339 ou YYYY-MM-DD)"
 // @Param finalizado query bool false "Finalizado"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]interface{}

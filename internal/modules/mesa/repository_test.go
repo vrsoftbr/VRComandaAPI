@@ -83,3 +83,37 @@ func TestMongoRepositoryListWithEmptyFilter(t *testing.T) {
 		t.Fatalf("expected empty result, got len=%d", len(result))
 	}
 }
+
+func TestMongoRepositoryListBuildsBatchMesasQuery(t *testing.T) {
+	defer resetFindAllMesasFn()
+
+	var capturedFilter interface{}
+	findAllMesasFn = func(_ context.Context, _ *mongo.Collection, filter interface{}, _ *options.FindOptions, _ func()) ([]Mesa, error) {
+		capturedFilter = filter
+		return []Mesa{}, nil
+	}
+
+	repo := &mongoRepository{
+		getDatabase:          func() *mongo.Database { return nil },
+		invalidateConnection: func() {},
+		collectionName:       "mesas",
+	}
+
+	_, err := repo.List(context.Background(), ListMesasFilter{Mesas: []int{3, 5}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	query, ok := capturedFilter.(bson.M)
+	if !ok {
+		t.Fatalf("expected bson.M filter, got %T", capturedFilter)
+	}
+	inFilter, ok := query["mesa"].(bson.M)
+	if !ok {
+		t.Fatalf("expected bson.M mesa filter, got %T", query["mesa"])
+	}
+	values, ok := inFilter["$in"].([]int)
+	if !ok || len(values) != 2 || values[0] != 3 || values[1] != 5 {
+		t.Fatalf("unexpected $in values: %+v", inFilter["$in"])
+	}
+}
