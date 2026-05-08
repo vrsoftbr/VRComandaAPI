@@ -24,15 +24,22 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: true
 
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.12.0
         with:
           mongodb-version: "6.0"
 
+      - name: Sync Go modules
+        run: |
+          go mod tidy
+          go mod download
+          go mod verify
+
       - name: Run tests with coverage
         run: |
-          go test -v ./... -covermode=count -coverprofile=coverage.out
+          go test -mod=mod -v ./... -covermode=count -coverprofile=coverage.out
 
       - name: Build coverage report (overall + changed files)
         id: coverage
@@ -108,7 +115,7 @@ jobs:
           OVERALL_NUM="${OVERALL%%%}"
 
           echo "Minimum required coverage: ${MIN_COVERAGE}%"
-          echo "Current overall coverage: ${OVERALL}%"
+          echo "Current overall coverage: ${OVERALL}"
 
           BELOW_MIN=$(awk -v current="$OVERALL_NUM" -v min="$MIN_COVERAGE" 'BEGIN { if (current < min) print 1; else print 0 }')
           if [[ "$BELOW_MIN" == "1" ]]; then
