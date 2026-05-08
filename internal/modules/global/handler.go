@@ -22,6 +22,16 @@ func NewHandler(lancamentosDetalhesService LancamentosDetalhesService, consultar
 	}
 }
 
+// GetLancamentosDetalhes godoc
+// @Summary Listar lancamentos detalhados
+// @Description Lista lancamentos com detalhes de comanda, mesa e itens.
+// @Tags Global
+// @Param id_loja query int false "ID da loja"
+// @Param finalizado query bool false "Filtrar por status finalizado"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /lancamentos/detalhes [get]
 func (h *Handler) GetLancamentosDetalhes(c *gin.Context) {
 	var req ListLancamentosDetalhesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -41,6 +51,16 @@ func (h *Handler) GetLancamentosDetalhes(c *gin.Context) {
 	utils.RespondOK(c, http.StatusOK, result)
 }
 
+// ConsultarSituacaoComanda godoc
+// @Summary Consultar situacao de comanda
+// @Description Consulta situacao da comanda por numero de identificacao.
+// @Tags Global
+// @Param idLoja query int true "ID da loja"
+// @Param numeroIdentificacaoComanda query string true "Numero de identificacao da comanda"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /comanda/consultarsituacao [get]
 func (h *Handler) ConsultarSituacaoComanda(c *gin.Context) {
 	var req ConsultarSituacaoComandaRequest
 	if err := c.ShouldBindQuery(&req); err != nil {

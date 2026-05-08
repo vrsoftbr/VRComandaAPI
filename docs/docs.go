@@ -75,6 +75,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/comanda/consultarsituacao": {
+            "get": {
+                "description": "Consulta situacao da comanda por numero de identificacao.",
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Consultar situacao de comanda",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da loja",
+                        "name": "idLoja",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Numero de identificacao da comanda",
+                        "name": "numeroIdentificacaoComanda",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/comandas": {
             "get": {
                 "produces": [
@@ -167,6 +215,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "ID loja",
+                        "name": "id_loja",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "ID comanda",
                         "name": "id_comanda",
                         "in": "query"
@@ -185,7 +239,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "DataHora",
+                        "description": "Data e hora (RFC3339 ou YYYY-MM-DD)",
                         "name": "dataHora",
                         "in": "query"
                     },
@@ -259,6 +313,52 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/lancamentos/detalhes": {
+            "get": {
+                "description": "Lista lancamentos com detalhes de comanda, mesa e itens.",
+                "tags": [
+                    "Global"
+                ],
+                "summary": "Listar lancamentos detalhados",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da loja",
+                        "name": "id_loja",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filtrar por status finalizado",
+                        "name": "finalizado",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -575,6 +675,66 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/produtos": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Produto"
+                ],
+                "summary": "Listar produtos",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da loja",
+                        "name": "idLoja",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Codigo de barras",
+                        "name": "codigoBarras",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descricao completa",
+                        "name": "descricaocompleta",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Descricao cupom",
+                        "name": "descricaocupom",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -673,7 +833,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/",
+	BasePath:         "/api/v1",
 	Schemes:          []string{"http"},
 	Title:            "VRComandaAPI",
 	Description:      "API backend para operacao de comandas.",

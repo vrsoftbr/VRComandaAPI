@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api/v1
 definitions:
   lancamento.CreateItemRequest:
     properties:
@@ -106,6 +106,39 @@ paths:
       summary: Listar atendentes
       tags:
       - Atendente
+  /comanda/consultarsituacao:
+    get:
+      description: Consulta situacao da comanda por numero de identificacao.
+      parameters:
+      - description: ID da loja
+        in: query
+        name: idLoja
+        required: true
+        type: integer
+      - description: Numero de identificacao da comanda
+        in: query
+        name: numeroIdentificacaoComanda
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Consultar situacao de comanda
+      tags:
+      - Global
   /comandas:
     get:
       parameters:
@@ -162,6 +195,10 @@ paths:
   /lancamentos:
     get:
       parameters:
+      - description: ID loja
+        in: query
+        name: id_loja
+        type: integer
       - description: ID comanda
         in: query
         name: id_comanda
@@ -174,7 +211,7 @@ paths:
         in: query
         name: id_atendente
         type: integer
-      - description: DataHora
+      - description: Data e hora (RFC3339 ou YYYY-MM-DD)
         in: query
         name: dataHora
         type: string
@@ -286,6 +323,37 @@ paths:
       summary: Editar lancamento
       tags:
       - Lancamento
+  /lancamentos/detalhes:
+    get:
+      description: Lista lancamentos com detalhes de comanda, mesa e itens.
+      parameters:
+      - description: ID da loja
+        in: query
+        name: id_loja
+        type: integer
+      - description: Filtrar por status finalizado
+        in: query
+        name: finalizado
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar lancamentos detalhados
+      tags:
+      - Global
   /lancamentos/itens:
     get:
       parameters:
@@ -444,6 +512,46 @@ paths:
       summary: Listar mesas
       tags:
       - Mesa
+  /produtos:
+    get:
+      parameters:
+      - description: ID da loja
+        in: query
+        name: idLoja
+        type: integer
+      - description: Codigo de barras
+        in: query
+        name: codigoBarras
+        type: string
+      - description: Descricao completa
+        in: query
+        name: descricaocompleta
+        type: string
+      - description: Descricao cupom
+        in: query
+        name: descricaocupom
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar produtos
+      tags:
+      - Produto
 schemes:
 - http
 swagger: "2.0"
