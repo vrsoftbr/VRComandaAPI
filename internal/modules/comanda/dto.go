@@ -9,7 +9,6 @@ type ListComandasRequest struct {
 }
 
 type ComandaResponse struct {
-	ID                  string `json:"_id"`
 	IDLoja              int    `json:"idLoja"`
 	Comanda             int    `json:"comanda"`
 	NumeroIdentificacao string `json:"numeroIdentificacao"`

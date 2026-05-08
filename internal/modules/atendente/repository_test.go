@@ -18,7 +18,7 @@ func resetFindAllAtendentesFn() {
 func TestMongoRepositoryListBuildsQueryAndSort(t *testing.T) {
 	defer resetFindAllAtendentesFn()
 
-	expected := []Atendente{{Codigo: "A1", Nome: "Ana", Ativo: true}}
+	expected := []Atendente{{IDAtendente: "A1", Nome: "Ana", Ativo: true}}
 
 	findAllAtendentesFn = func(ctx context.Context, collection *mongo.Collection, filter interface{}, findOptions *options.FindOptions, invalidateConnection func()) ([]Atendente, error) {
 		return expected, nil
@@ -43,15 +43,15 @@ func TestMongoRepositoryListBuildsQueryAndSort(t *testing.T) {
 	ativo := true
 	ctx := context.WithValue(context.Background(), "k", "v")
 	result, err := repo.List(ctx, ListAtendentesFilter{
-		IDLoja: 10,
-		Codigo: "A1",
-		Nome:   "An(a)",
-		Ativo:  &ativo,
+		IDLoja:      10,
+		IDAtendente: "A1",
+		Nome:        "An(a)",
+		Ativo:       &ativo,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(result) != 1 || result[0].Codigo != "A1" {
+	if len(result) != 1 || result[0].IDAtendente != "A1" {
 		t.Fatalf("unexpected result: %+v", result)
 	}
 }

@@ -36,7 +36,6 @@ func (s *service) List(ctx context.Context, req ListComandasRequest) ([]ComandaR
 	response := make([]ComandaResponse, 0, len(models))
 	for _, m := range models {
 		response = append(response, ComandaResponse{
-			ID:                  m.ID.Hex(),
 			IDLoja:              m.IDLoja,
 			Comanda:             m.Comanda,
 			NumeroIdentificacao: m.NumeroIdentificacao,

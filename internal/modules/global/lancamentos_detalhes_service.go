@@ -3,6 +3,7 @@ package global
 import (
 	"context"
 	"sort"
+	"time"
 
 	"vrcomandaapi/internal/modules/comanda"
 	"vrcomandaapi/internal/modules/lancamento"
@@ -66,12 +67,13 @@ func (s *lancamentosDetalhesService) Execute(ctx context.Context, req ListLancam
 
 	result := make([]LancamentoDetalhesDTO, 0, len(lancamentos))
 	for _, item := range lancamentos {
+
 		row := LancamentoDetalhesDTO{
 			IDLancamento: item.ID,
 			IDLoja:       item.IDLoja,
 			IDComanda:    item.IDComanda,
 			IDMesa:       item.IDMesa,
-			DataHora:     item.DataHora.Format("2006-01-02T15:04:05Z07:00"),
+			DataHora:     item.DataHora.Format(time.RFC3339),
 			Observacao:   item.Observacao,
 			IDAtendente:  item.IDAtendente,
 			Finalizado:   item.Finalizado,

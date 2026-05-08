@@ -25,22 +25,22 @@ func TestServiceListBuildsFilterAndMapsResponse(t *testing.T) {
 		listFn: func(_ context.Context, filter ListAtendentesFilter) ([]Atendente, error) {
 			called++
 			return []Atendente{{
-				ID:     expectedID,
-				IDLoja: 20,
-				Codigo: "01",
-				Nome:   "Maria",
-				Senha:  "123",
-				Ativo:  true,
+				ID:          expectedID,
+				IDLoja:      20,
+				IDAtendente: "01",
+				Nome:        "Maria",
+				Senha:       "123",
+				Ativo:       true,
 			}}, nil
 		},
 	}
 
 	svc := NewService(repo)
 	result, err := svc.List(context.Background(), ListAtendentesRequest{
-		IDLoja: 20,
-		Codigo: "01",
-		Nome:   "Mar",
-		Ativo:  &ativo,
+		IDLoja:      20,
+		IDAtendente: "01",
+		Nome:        "Mar",
+		Ativo:       &ativo,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -60,7 +60,7 @@ func TestServiceListDoesNotSetAtivoWhenNil(t *testing.T) {
 	}
 
 	svc := NewService(repo)
-	_, err := svc.List(context.Background(), ListAtendentesRequest{IDLoja: 1, Codigo: "C", Nome: "N"})
+	_, err := svc.List(context.Background(), ListAtendentesRequest{IDLoja: 1, IDAtendente: "C", Nome: "N"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

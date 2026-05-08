@@ -20,4 +20,12 @@ func TestRegisterRoutes(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected registered route status=200, got %d", w.Code)
 	}
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/comanda/consultarsituacao?idLoja=1&numeroIdentificacaoComanda=100", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected registered route status=200, got %d", w.Code)
+	}
 }

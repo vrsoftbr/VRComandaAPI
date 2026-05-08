@@ -74,7 +74,7 @@ func TestHandlerList(t *testing.T) {
 			if req.IDLoja != 7 || req.Comanda != 70 || req.NumeroIdentificacao != "ID70" || req.Ativo == nil || !*req.Ativo {
 				t.Fatalf("unexpected request passed to service: %+v", req)
 			}
-			return []ComandaResponse{{ID: "1", IDLoja: 7, Comanda: 70, NumeroIdentificacao: "ID70", Observacao: "obs", Ativo: true}}, nil
+			return []ComandaResponse{{IDLoja: 7, Comanda: 70, NumeroIdentificacao: "ID70", Observacao: "obs", Ativo: true}}, nil
 		}})
 
 		r := gin.New()

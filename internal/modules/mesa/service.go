@@ -35,7 +35,6 @@ func (s *service) List(ctx context.Context, req ListMesasRequest) ([]MesaRespons
 	response := make([]MesaResponse, 0, len(models))
 	for _, m := range models {
 		response = append(response, MesaResponse{
-			ID:        m.ID.Hex(),
 			IDLoja:    m.IDLoja,
 			Mesa:      m.Mesa,
 			Descricao: m.Descricao,

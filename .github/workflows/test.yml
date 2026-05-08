@@ -1,0 +1,171 @@
+name: Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  test:
+    name: Go Tests and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.0
+        with:
+          mongodb-version: "6.0"
+
+      - name: Run tests with coverage
+        run: |
+          go test -v ./... -covermode=count -coverprofile=coverage.out
+
+      - name: Build coverage report (overall + changed files)
+        id: coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          go tool cover -func=coverage.out > coverage-func.txt
+
+          OVERALL_COVERAGE=$(awk '/^total:/{print $3}' coverage-func.txt)
+          echo "overall=$OVERALL_COVERAGE" >> "$GITHUB_OUTPUT"
+
+          awk 'NR>1 {
+            split($1, pos, ":");
+            file = pos[1];
+            stmts[file] += $2;
+            if ($3 > 0) covered[file] += $2;
+          }
+          END {
+            for (f in stmts) {
+              pct = (stmts[f] == 0 ? 0 : (covered[f] / stmts[f]) * 100);
+              printf "%s %.2f\n", f, pct;
+            }
+          }' coverage.out | sort > file-coverage.txt
+
+          {
+            echo "## Coverage Summary"
+            echo ""
+            echo "- Overall project coverage: **${OVERALL_COVERAGE}**"
+            echo ""
+            echo "### Changed Go files in this PR"
+          } > report.md
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git fetch origin "${{ github.base_ref }}" --depth=1
+            CHANGED_GO_FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- '*.go' || true)
+          else
+            CHANGED_GO_FILES=""
+          fi
+
+          if [[ -z "${CHANGED_GO_FILES}" ]]; then
+            {
+              echo ""
+              echo "No changed .go files detected in this PR diff."
+            } >> report.md
+          else
+            {
+              echo ""
+              echo "| File | Coverage |"
+              echo "|---|---:|"
+            } >> report.md
+
+            while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+              value=$(awk -v target="$file" '$1==target {print $2 "%"}' file-coverage.txt)
+              if [[ -z "$value" ]]; then
+                value="N/A"
+              fi
+              printf "| %s | %s |\n" "$file" "$value" >> report.md
+            done <<< "$CHANGED_GO_FILES"
+          fi
+
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Quality Gate - minimum coverage 95%
+        shell: bash
+        env:
+          MIN_COVERAGE: "95.00"
+        run: |
+          set -euo pipefail
+
+          OVERALL="${{ steps.coverage.outputs.overall }}"
+          OVERALL_NUM="${OVERALL%%%}"
+
+          echo "Minimum required coverage: ${MIN_COVERAGE}%"
+          echo "Current overall coverage: ${OVERALL}%"
+
+          BELOW_MIN=$(awk -v current="$OVERALL_NUM" -v min="$MIN_COVERAGE" 'BEGIN { if (current < min) print 1; else print 0 }')
+          if [[ "$BELOW_MIN" == "1" ]]; then
+            echo "Coverage is below ${MIN_COVERAGE}%. Failing workflow."
+            exit 1
+          fi
+
+          echo "Coverage gate passed."
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage-func.txt
+            file-coverage.txt
+            report.md
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          REPORT_FILE: report.md
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync(process.env.REPORT_FILE, 'utf8');
+            const marker = '<!-- vrcomandaapi-coverage-report -->';
+            const body = `${marker}\n${report}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body && c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }

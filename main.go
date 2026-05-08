@@ -21,6 +21,7 @@ import (
 	"vrcomandaapi/internal/modules/global"
 	"vrcomandaapi/internal/modules/lancamento"
 	"vrcomandaapi/internal/modules/mesa"
+	"vrcomandaapi/internal/modules/produto"
 	"vrcomandaapi/internal/shared/middleware"
 	"vrcomandaapi/internal/shared/models"
 	"vrcomandaapi/internal/shared/utils"
@@ -43,7 +44,7 @@ var autoMigrateSQLite = func(db *gorm.DB) error {
 // @version 1.0
 // @description API backend para operacao de comandas.
 // @host localhost:8080
-// @BasePath /
+// @BasePath /api/v1
 // @schemes http
 
 // bootstrap wires infrastructure and routes in one place.
@@ -75,15 +76,18 @@ func bootstrap() (*gin.Engine, error) {
 	router.GET("/health", utils.HealthHandler)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Each module receives only the dependency it needs.
-	comanda.RegisterRoutes(router, mongoManager.DB, mongoManager.InvalidateConnection)
-	mesa.RegisterRoutes(router, mongoManager.DB, mongoManager.InvalidateConnection)
-	atendente.RegisterRoutes(router, mongoManager.DB, mongoManager.InvalidateConnection)
+	v1 := router.Group("/api/v1")
 
-	lancamento.RegisterRoutes(router, sqliteDB)
+	// Each module receives only the dependency it needs.
+	comanda.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+	mesa.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+	atendente.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+	produto.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+
+	lancamento.RegisterRoutes(v1, sqliteDB)
 
 	global.RegisterRoutes(
-		router,
+		v1,
 		lancamento.NewService(lancamento.NewRepository(sqliteDB)),
 		comanda.NewService(comanda.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "comandas")),
 		mesa.NewService(mesa.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "mesas")),

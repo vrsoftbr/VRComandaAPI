@@ -18,9 +18,9 @@ func NewService(repo Repository) Service {
 
 func (s *service) List(ctx context.Context, req ListAtendentesRequest) ([]AtendenteResponse, error) {
 	filter := ListAtendentesFilter{
-		IDLoja: req.IDLoja,
-		Codigo: req.Codigo,
-		Nome:   req.Nome,
+		IDLoja:      req.IDLoja,
+		IDAtendente: req.IDAtendente,
+		Nome:        req.Nome,
 	}
 
 	if req.Ativo != nil {
@@ -35,12 +35,11 @@ func (s *service) List(ctx context.Context, req ListAtendentesRequest) ([]Atende
 	response := make([]AtendenteResponse, 0, len(models))
 	for _, m := range models {
 		response = append(response, AtendenteResponse{
-			ID:     m.ID.Hex(),
-			IDLoja: m.IDLoja,
-			Codigo: m.Codigo,
-			Nome:   m.Nome,
-			Senha:  m.Senha,
-			Ativo:  m.Ativo,
+			IDLoja:      m.IDLoja,
+			IDAtendente: m.IDAtendente,
+			Nome:        m.Nome,
+			Senha:       m.Senha,
+			Ativo:       m.Ativo,
 		})
 	}
 

@@ -1,24 +1,23 @@
 package atendente
 
 type ListAtendentesRequest struct {
-	IDLoja int    `form:"idLoja"`
-	Codigo string `form:"codigo"`
-	Nome   string `form:"nome"`
-	Ativo  *bool  `form:"ativo"`
+	IDLoja      int    `form:"idLoja"`
+	IDAtendente string `form:"idAtendente"`
+	Nome        string `form:"nome"`
+	Ativo       *bool  `form:"ativo"`
 }
 
 type AtendenteResponse struct {
-	ID     string `json:"_id"`
-	IDLoja int    `json:"idLoja"`
-	Codigo string `json:"codigo"`
-	Nome   string `json:"nome"`
-	Senha  string `json:"senha"`
-	Ativo  bool   `json:"ativo"`
+	IDLoja      int    `json:"idLoja"`
+	IDAtendente string `json:"idAtendente"`
+	Nome        string `json:"nome"`
+	Senha       string `json:"senha"`
+	Ativo       bool   `json:"ativo"`
 }
 
 type ListAtendentesFilter struct {
-	IDLoja int
-	Codigo string
-	Nome   string
-	Ativo  *bool
+	IDLoja      int
+	IDAtendente string
+	Nome        string
+	Ativo       *bool
 }

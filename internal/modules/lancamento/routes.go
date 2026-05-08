@@ -6,7 +6,7 @@ import (
 )
 
 // RegisterRoutes wires Lancamento HTTP endpoints and its dependencies.
-func RegisterRoutes(router *gin.Engine, db *gorm.DB) {
+func RegisterRoutes(router gin.IRouter, db *gorm.DB) {
 	repository := NewRepository(db)
 	service := NewService(repository)
 	handler := NewHandler(service)

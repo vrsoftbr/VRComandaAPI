@@ -28,3 +28,22 @@ type GlobalFilterRequest struct {
 type ListLancamentosDetalhesRequest struct {
 	GlobalFilterRequest
 }
+
+type SituacaoComanda int
+
+const (
+	SituacaoComandaLiberada  SituacaoComanda = 1
+	SituacaoComandaBloqueada SituacaoComanda = 2
+)
+
+type ConsultarSituacaoComandaRequest struct {
+	IDLoja                     int    `form:"idLoja"`
+	NumeroIdentificacaoComanda string `form:"numeroIdentificacaoComanda"`
+}
+
+type ConsultarSituacaoComandaResponse struct {
+	IDLoja                     int             `json:"idLoja"`
+	Comanda                    int             `json:"comanda"`
+	NumeroIdentificacaoComanda string          `json:"numeroIdentificacaoComanda"`
+	Situacao                   SituacaoComanda `json:"situacao"`
+}

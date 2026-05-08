@@ -46,7 +46,7 @@ func TestHandlerList(t *testing.T) {
 
 	t.Run("returns 500 when service fails", func(t *testing.T) {
 		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListAtendentesRequest) ([]AtendenteResponse, error) {
-			if req.IDLoja != 5 || req.Codigo != "A" || req.Nome != "Ana" {
+			if req.IDLoja != 5 || req.IDAtendente != "A" || req.Nome != "Ana" {
 				t.Fatalf("unexpected request passed to service: %+v", req)
 			}
 			return nil, errors.New("boom")
@@ -56,7 +56,7 @@ func TestHandlerList(t *testing.T) {
 		r.GET("/atendentes", h.List)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/atendentes?idLoja=5&codigo=A&nome=Ana", nil)
+		req := httptest.NewRequest(http.MethodGet, "/atendentes?idLoja=5&idAtendente=A&nome=Ana", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusInternalServerError {
@@ -71,17 +71,17 @@ func TestHandlerList(t *testing.T) {
 		called := 0
 		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListAtendentesRequest) ([]AtendenteResponse, error) {
 			called++
-			if req.IDLoja != 7 || req.Codigo != "07" || req.Nome != "Jo" || req.Ativo == nil || !*req.Ativo {
+			if req.IDLoja != 7 || req.IDAtendente != "07" || req.Nome != "Jo" || req.Ativo == nil || !*req.Ativo {
 				t.Fatalf("unexpected request passed to service: %+v", req)
 			}
-			return []AtendenteResponse{{ID: "1", IDLoja: 7, Codigo: "07", Nome: "Joao", Senha: "x", Ativo: true}}, nil
+			return []AtendenteResponse{{IDLoja: 7, IDAtendente: "07", Nome: "Joao", Senha: "x", Ativo: true}}, nil
 		}})
 
 		r := gin.New()
 		r.GET("/atendentes", h.List)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/atendentes?idLoja=7&codigo=07&nome=Jo&ativo=true", nil)
+		req := httptest.NewRequest(http.MethodGet, "/atendentes?idLoja=7&idAtendente=07&nome=Jo&ativo=true", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {

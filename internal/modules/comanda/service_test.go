@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type repositoryStub struct {
@@ -18,14 +16,12 @@ func (s repositoryStub) List(ctx context.Context, filter ListComandasFilter) ([]
 
 func TestServiceListBuildsFilterAndMapsResponse(t *testing.T) {
 	ativo := true
-	expectedID := primitive.NewObjectID()
 
 	called := 0
 	repo := repositoryStub{
 		listFn: func(_ context.Context, filter ListComandasFilter) ([]Comanda, error) {
 			called++
 			return []Comanda{{
-				ID:                  expectedID,
 				IDLoja:              20,
 				Comanda:             101,
 				NumeroIdentificacao: "1",

@@ -43,8 +43,8 @@ func (r *mongoRepository) List(ctx context.Context, filter ListAtendentesFilter)
 	if filter.IDLoja != 0 {
 		query["idLoja"] = filter.IDLoja
 	}
-	if filter.Codigo != "" {
-		query["codigo"] = filter.Codigo
+	if filter.IDAtendente != "" {
+		query["idAtendente"] = filter.IDAtendente
 	}
 	if filter.Nome != "" {
 		pattern := ".*" + regexp.QuoteMeta(filter.Nome) + ".*"

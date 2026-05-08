@@ -1,15 +1,14 @@
 package mesa
 
 type ListMesasRequest struct {
-	IDLoja int   `form:"id_loja"`
+	IDLoja int   `form:"idLoja"`
 	Mesa   int   `form:"mesa"`
 	Mesas  []int `form:"mesas"`
 	Ativo  *bool `form:"ativo"`
 }
 
 type MesaResponse struct {
-	ID        string `json:"_id"`
-	IDLoja    int    `json:"id_loja"`
+	IDLoja    int    `json:"idLoja"`
 	Mesa      int    `json:"mesa"`
 	Descricao string `json:"descricao"`
 	Ativo     bool   `json:"ativo"`
