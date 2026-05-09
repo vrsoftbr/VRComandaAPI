@@ -21,7 +21,7 @@ type LancamentoDetalhesDTO struct {
 }
 
 type GlobalFilterRequest struct {
-	IDLoja     int   `form:"id_loja"`
+	IDLoja     int   `form:"idLoja"`
 	Finalizado *bool `form:"finalizado"`
 }
 
