@@ -83,4 +83,25 @@ func TestHandlerList(t *testing.T) {
 			t.Fatalf("expected one item in data, got %d", len(items))
 		}
 	})
+
+	t.Run("returns 400 when query binding fails", func(t *testing.T) {
+		h := NewHandler(serviceStub{listFn: func(_ context.Context, _ ListProdutosRequest) (interface{}, error) {
+			t.Fatal("service should not be called on bind error")
+			return nil, nil
+		}})
+
+		r := gin.New()
+		r.GET("/produtos", h.List)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/produtos?limit=999", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d", w.Code)
+		}
+
+		body := utils.DecodeBodyMap(t, w.Body.Bytes())
+		utils.AssertDataNil(t, body)
+	})
 }

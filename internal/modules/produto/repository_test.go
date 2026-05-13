@@ -2,6 +2,7 @@ package produto
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,10 +12,12 @@ import (
 
 var originalFindAllProdutosCodigoBarrasFn = findAllProdutosCodigoBarrasFn
 var originalFindAllProdutosFn = findAllProdutosFn
+var originalCountProdutosFn = countProdutosFn
 
 func resetFindFns() {
 	findAllProdutosCodigoBarrasFn = originalFindAllProdutosCodigoBarrasFn
 	findAllProdutosFn = originalFindAllProdutosFn
+	countProdutosFn = originalCountProdutosFn
 }
 
 func TestMongoRepositoryListUsesCodigoBarrasToFilterProdutos(t *testing.T) {
@@ -179,5 +182,169 @@ func TestMongoRepositoryListWithoutCodigoBarrasQueriesProdutosDirectly(t *testin
 	}
 	if query["idLoja"] != 1 {
 		t.Fatalf("unexpected idLoja in query: %+v", query["idLoja"])
+	}
+}
+
+func TestMongoRepositoryCollectionReturnsNilWhenDatabaseNil(t *testing.T) {
+	repo := &mongoRepository{
+		getDatabase:                func() *mongo.Database { return nil },
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	if repo.collection("produtos") != nil {
+		t.Fatal("expected nil collection when DB is nil")
+	}
+}
+
+func TestMongoRepositoryCountDocumentsErrorPropagated(t *testing.T) {
+	defer resetFindFns()
+
+	countProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}) (int64, error) {
+		return 0, errors.New("count failed")
+	}
+
+	fakeClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://fake:27017"))
+	if err != nil {
+		t.Fatalf("unexpected client creation error: %v", err)
+	}
+
+	repo := &mongoRepository{
+		getDatabase: func() *mongo.Database {
+			return fakeClient.Database("vrcomanda_test")
+		},
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	_, err = repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
+	if err == nil {
+		t.Fatal("expected error from countProdutosFn, got nil")
+	}
+}
+
+func TestMongoRepositoryCountZeroReturnsEmptyResult(t *testing.T) {
+	defer resetFindFns()
+
+	countProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}) (int64, error) {
+		return 0, nil // count returns 0 → should return empty result immediately
+	}
+
+	fakeClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://fake:27017"))
+	if err != nil {
+		t.Fatalf("unexpected client creation error: %v", err)
+	}
+
+	repo := &mongoRepository{
+		getDatabase: func() *mongo.Database {
+			return fakeClient.Database("vrcomanda_test")
+		},
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	result, err := repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil || len(result.Items) != 0 || result.Total != 0 {
+		t.Fatalf("expected empty result when count == 0, got %+v", result)
+	}
+}
+
+func TestMongoRepositoryCountPositiveProceedsToPaginate(t *testing.T) {
+	defer resetFindFns()
+
+	countProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}) (int64, error) {
+		return 3, nil // count returns 3 → proceed to findAll
+	}
+
+	findAllProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}, _ *options.FindOptions, _ func()) ([]Produto, error) {
+		return []Produto{{IDProduto: 1, IDLoja: 1}}, nil
+	}
+
+	findAllProdutosCodigoBarrasFn = func(_ context.Context, _ *mongo.Collection, _ interface{}, _ *options.FindOptions, _ func()) ([]ProdutoCodigoBarras, error) {
+		return []ProdutoCodigoBarras{}, nil
+	}
+
+	fakeClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://fake:27017"))
+	if err != nil {
+		t.Fatalf("unexpected client creation error: %v", err)
+	}
+
+	repo := &mongoRepository{
+		getDatabase: func() *mongo.Database {
+			return fakeClient.Database("vrcomanda_test")
+		},
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	result, err := repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil || len(result.Items) != 1 || result.Total != 3 {
+		t.Fatalf("expected one item with total=3, got %+v", result)
+	}
+}
+
+func TestMongoRepositoryFindAllProdutosErrorPropagated(t *testing.T) {
+	defer resetFindFns()
+
+	countProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}) (int64, error) {
+		return 5, nil
+	}
+
+	findAllProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}, _ *options.FindOptions, _ func()) ([]Produto, error) {
+		return nil, errors.New("findAll products failed")
+	}
+
+	fakeClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://fake:27017"))
+	if err != nil {
+		t.Fatalf("unexpected client creation error: %v", err)
+	}
+
+	repo := &mongoRepository{
+		getDatabase: func() *mongo.Database {
+			return fakeClient.Database("vrcomanda_test")
+		},
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	_, err = repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
+	if err == nil {
+		t.Fatal("expected error from findAllProdutosFn, got nil")
+	}
+}
+
+func TestMongoRepositoryCodigoBarrasLookupErrorPropagated(t *testing.T) {
+	defer resetFindFns()
+
+	// When CodigoBarras filter is empty, there's only one call: the product ID barcode lookup
+	findAllProdutosCodigoBarrasFn = func(_ context.Context, _ *mongo.Collection, _ interface{}, _ *options.FindOptions, _ func()) ([]ProdutoCodigoBarras, error) {
+		return nil, errors.New("codigo barras lookup failed")
+	}
+
+	findAllProdutosFn = func(_ context.Context, _ *mongo.Collection, _ interface{}, _ *options.FindOptions, _ func()) ([]Produto, error) {
+		return []Produto{{IDProduto: 1, IDLoja: 1}}, nil
+	}
+
+	repo := &mongoRepository{
+		getDatabase:                func() *mongo.Database { return nil },
+		invalidateConnection:       func() {},
+		produtosCollectionName:     "produtos",
+		codigoBarrasCollectionName: "produtoscodigobarras",
+	}
+
+	_, err := repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
+	if err == nil {
+		t.Fatal("expected error from findAllProdutosCodigoBarrasFn product lookup, got nil")
 	}
 }
