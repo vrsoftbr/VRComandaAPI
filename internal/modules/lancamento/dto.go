@@ -52,6 +52,7 @@ type CreateLancamentoRequest struct {
 }
 
 type ListLancamentosRequest struct {
+	ID          int    `form:"id"`
 	IDComanda   int    `form:"id_comanda"`
 	IDLoja      int    `form:"id_loja"`
 	IDMesa      int    `form:"id_mesa"`
@@ -61,6 +62,7 @@ type ListLancamentosRequest struct {
 }
 
 type ListLancamentosFilter struct {
+	ID          *int
 	IDLoja      *int
 	IDComanda   *int
 	IDMesa      *int

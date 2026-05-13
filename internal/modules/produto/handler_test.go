@@ -12,10 +12,10 @@ import (
 )
 
 type serviceStub struct {
-	listFn func(ctx context.Context, req ListProdutosRequest) ([]ProdutoResponse, error)
+	listFn func(ctx context.Context, req ListProdutosRequest) (interface{}, error)
 }
 
-func (s serviceStub) List(ctx context.Context, req ListProdutosRequest) ([]ProdutoResponse, error) {
+func (s serviceStub) List(ctx context.Context, req ListProdutosRequest) (interface{}, error) {
 	return s.listFn(ctx, req)
 }
 
@@ -23,7 +23,7 @@ func TestHandlerList(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	t.Run("returns 500 when service fails", func(t *testing.T) {
-		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListProdutosRequest) ([]ProdutoResponse, error) {
+		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListProdutosRequest) (interface{}, error) {
 			if req.IDLoja != 5 || req.CodigoBarras != "123" || req.DescricaoCompleta != "REPOLHO" || req.DescricaoCupom != "KG" {
 				t.Fatalf("unexpected request passed to service: %+v", req)
 			}
@@ -47,12 +47,18 @@ func TestHandlerList(t *testing.T) {
 
 	t.Run("returns 200 with data", func(t *testing.T) {
 		called := 0
-		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListProdutosRequest) ([]ProdutoResponse, error) {
+		h := NewHandler(serviceStub{listFn: func(_ context.Context, req ListProdutosRequest) (interface{}, error) {
 			called++
 			if req.IDLoja != 7 || req.CodigoBarras != "789" || req.DescricaoCompleta != "ROXO" || req.DescricaoCupom != "KG" {
 				t.Fatalf("unexpected request passed to service: %+v", req)
 			}
-			return []ProdutoResponse{{ID: "1", IDProduto: 2, IDLoja: 7, DescricaoCompleta: "REPOLHO ROXO KG", DescricaoCupom: "REPOLHO ROXO KG"}}, nil
+			return ProdutosPaginatedResponse{
+				Items: []ProdutoResponse{{ID: "1", IDProduto: 2, IDLoja: 7, DescricaoCompleta: "REPOLHO ROXO KG", DescricaoCupom: "REPOLHO ROXO KG"}},
+				Page:  1,
+				Limit: 20,
+				Total: 1,
+				Pages: 1,
+			}, nil
 		}})
 
 		r := gin.New()
@@ -71,9 +77,10 @@ func TestHandlerList(t *testing.T) {
 
 		body := utils.DecodeBodyMap(t, w.Body.Bytes())
 		utils.AssertMessageEquals(t, body, "ok")
-		data := utils.AssertDataArray(t, body)
-		if len(data) != 1 {
-			t.Fatalf("expected one item in data, got %d", len(data))
+		data := body["data"].(map[string]interface{})
+		items := data["items"].([]interface{})
+		if len(items) != 1 {
+			t.Fatalf("expected one item in data, got %d", len(items))
 		}
 	})
 }

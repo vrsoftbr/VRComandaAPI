@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	List(ctx context.Context, req ListProdutosRequest) ([]ProdutoResponse, error)
+	List(ctx context.Context, req ListProdutosRequest) (interface{}, error)
 }
 
 type service struct {
@@ -18,21 +18,30 @@ func NewService(repo Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) List(ctx context.Context, req ListProdutosRequest) ([]ProdutoResponse, error) {
+func (s *service) List(ctx context.Context, req ListProdutosRequest) (interface{}, error) {
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Limit <= 0 {
+		req.Limit = 20
+	}
+
 	filter := ListProdutosFilter{
 		IDLoja:            req.IDLoja,
 		CodigoBarras:      req.CodigoBarras,
 		DescricaoCompleta: req.DescricaoCompleta,
 		DescricaoCupom:    req.DescricaoCupom,
+		Page:              req.Page,
+		Limit:             req.Limit,
 	}
 
-	models, err := s.repo.List(ctx, filter)
+	result, err := s.repo.List(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	response := make([]ProdutoResponse, 0, len(models))
-	for _, p := range models {
+	response := make([]ProdutoResponse, 0, len(result.Items))
+	for _, p := range result.Items {
 		var codigoBarras string
 		var embalagem string
 		var quantidadeEmbalagem int
@@ -71,7 +80,19 @@ func (s *service) List(ctx context.Context, req ListProdutosRequest) ([]ProdutoR
 		})
 	}
 
-	return response, nil
+	// Calcular total de páginas
+	pages := int64(1)
+	if result.Total > 0 {
+		pages = (result.Total + int64(req.Limit) - 1) / int64(req.Limit)
+	}
+
+	return ProdutosPaginatedResponse{
+		Items: response,
+		Page:  req.Page,
+		Limit: req.Limit,
+		Total: result.Total,
+		Pages: pages,
+	}, nil
 }
 
 func decimalToString(value primitive.Decimal128) string {

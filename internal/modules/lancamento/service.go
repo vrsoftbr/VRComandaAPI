@@ -66,6 +66,11 @@ func (s *service) Create(ctx context.Context, req CreateLancamentoRequest) (*mod
 func (s *service) List(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 	filter := ListLancamentosFilter{}
 
+	if req.ID > 0 {
+		v := req.ID
+		filter.ID = &v
+	}
+
 	if req.IDLoja != 0 {
 		v := req.IDLoja
 		filter.IDLoja = &v

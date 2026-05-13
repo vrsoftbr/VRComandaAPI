@@ -20,7 +20,9 @@ import (
 	"vrcomandaapi/internal/modules/comanda"
 	"vrcomandaapi/internal/modules/global"
 	"vrcomandaapi/internal/modules/lancamento"
+	"vrcomandaapi/internal/modules/loja"
 	"vrcomandaapi/internal/modules/mesa"
+	"vrcomandaapi/internal/modules/parametros"
 	"vrcomandaapi/internal/modules/produto"
 	"vrcomandaapi/internal/shared/middleware"
 	"vrcomandaapi/internal/shared/models"
@@ -83,14 +85,18 @@ func bootstrap() (*gin.Engine, error) {
 	mesa.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
 	atendente.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
 	produto.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+	loja.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
+	parametros.RegisterRoutes(v1, mongoManager.DB, mongoManager.InvalidateConnection)
 
 	lancamento.RegisterRoutes(v1, sqliteDB)
 
 	global.RegisterRoutes(
 		v1,
 		lancamento.NewService(lancamento.NewRepository(sqliteDB)),
+		atendente.NewService(atendente.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "atendentes")),
 		comanda.NewService(comanda.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "comandas")),
 		mesa.NewService(mesa.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "mesas")),
+		produto.NewService(produto.NewMongoRepository(mongoManager.DB, mongoManager.InvalidateConnection, "produtos", "produtoscodigobarras")),
 	)
 
 	return router, nil

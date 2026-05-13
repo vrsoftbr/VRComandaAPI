@@ -5,6 +5,8 @@ type ListProdutosRequest struct {
 	CodigoBarras      string `form:"codigoBarras"`
 	DescricaoCompleta string `form:"descricaocompleta"`
 	DescricaoCupom    string `form:"descricaocupom"`
+	Page              int    `form:"page" binding:"omitempty,gt=0"`
+	Limit             int    `form:"limit" binding:"omitempty,gt=0,lte=100"`
 }
 
 type ProdutoCodigoBarrasResponse struct {
@@ -47,4 +49,14 @@ type ListProdutosFilter struct {
 	CodigoBarras      string
 	DescricaoCompleta string
 	DescricaoCupom    string
+	Page              int
+	Limit             int
+}
+
+type ProdutosPaginatedResponse struct {
+	Items []ProdutoResponse `json:"items"`
+	Page  int               `json:"page"`
+	Limit int               `json:"limit"`
+	Total int64             `json:"total"`
+	Pages int64             `json:"pages"`
 }

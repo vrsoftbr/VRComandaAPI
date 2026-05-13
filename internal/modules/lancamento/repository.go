@@ -134,6 +134,9 @@ func (r *repository) List(ctx context.Context, filter ListLancamentosFilter) ([]
 			return db.Order("sequencia")
 		})
 
+	if filter.ID != nil {
+		query = query.Where("id = ?", *filter.ID)
+	}
 	if filter.IDLoja != nil {
 		query = query.Where("id_loja = ?", *filter.IDLoja)
 	}

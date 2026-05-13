@@ -12,8 +12,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type RepositoryResult struct {
+	Items []Produto
+	Total int64
+}
+
 type Repository interface {
-	List(ctx context.Context, filter ListProdutosFilter) ([]Produto, error)
+	List(ctx context.Context, filter ListProdutosFilter) (*RepositoryResult, error)
 }
 
 var findAllProdutosCodigoBarrasFn = database.FindAll[ProdutoCodigoBarras]
@@ -49,7 +54,7 @@ func (r *mongoRepository) collection(collectionName string) *mongo.Collection {
 	return db.Collection(collectionName)
 }
 
-func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) ([]Produto, error) {
+func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) (*RepositoryResult, error) {
 	produtosQuery := bson.M{}
 	if filter.IDLoja != 0 {
 		produtosQuery["idLoja"] = filter.IDLoja
@@ -79,7 +84,7 @@ func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) (
 			return nil, err
 		}
 		if len(codigos) == 0 {
-			return []Produto{}, nil
+			return &RepositoryResult{Items: []Produto{}, Total: 0}, nil
 		}
 
 		ids := make([]int, 0, len(codigos))
@@ -92,21 +97,43 @@ func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) (
 			ids = append(ids, item.IDProduto)
 		}
 		if len(ids) == 0 {
-			return []Produto{}, nil
+			return &RepositoryResult{Items: []Produto{}, Total: 0}, nil
 		}
 
 		idsFiltroCodigoBarras = ids
 		produtosQuery["idProduto"] = bson.M{"$in": ids}
 	}
 
-	findOptions := options.Find().SetSort(bson.M{"descricaocompleta": 1})
+	// Contar total de documentos
 	produtosCollection := r.collection(r.produtosCollectionName)
+	total := int64(0)
+	var err error
+	if produtosCollection != nil {
+		total, err = produtosCollection.CountDocuments(ctx, produtosQuery)
+		if err != nil {
+			return nil, err
+		}
+		if total == 0 {
+			return &RepositoryResult{Items: []Produto{}, Total: 0}, nil
+		}
+	}
+
+	// Calcular skip e aplicar paginação
+	skip := int64((filter.Page - 1) * filter.Limit)
+	findOptions := options.Find().
+		SetSort(bson.M{"descricaocompleta": 1}).
+		SetSkip(skip).
+		SetLimit(int64(filter.Limit))
+
 	produtos, err := findAllProdutosFn(ctx, produtosCollection, produtosQuery, findOptions, r.invalidateConnection)
 	if err != nil {
 		return nil, err
 	}
+	if total == 0 {
+		total = int64(len(produtos))
+	}
 	if len(produtos) == 0 {
-		return []Produto{}, nil
+		return &RepositoryResult{Items: []Produto{}, Total: total}, nil
 	}
 
 	idsProdutos := idsFiltroCodigoBarras
@@ -143,5 +170,5 @@ func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) (
 		produtos[i].CodigosBarras = porProduto[produtos[i].IDProduto]
 	}
 
-	return produtos, nil
+	return &RepositoryResult{Items: produtos, Total: total}, nil
 }

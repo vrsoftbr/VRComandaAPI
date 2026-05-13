@@ -11,7 +11,7 @@ import (
 func TestRegisterRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	RegisterRoutes(r, lancamentoServiceStub{}, comandaServiceStub{}, mesaServiceStub{})
+	RegisterRoutes(r, lancamentoServiceStub{}, atendenteServiceStub{}, comandaServiceStub{}, mesaServiceStub{}, produtoServiceStub{})
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/lancamentos/detalhes", nil)

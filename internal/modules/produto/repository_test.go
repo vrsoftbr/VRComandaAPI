@@ -49,12 +49,14 @@ func TestMongoRepositoryListUsesCodigoBarrasToFilterProdutos(t *testing.T) {
 		CodigoBarras:      " 12345 ",
 		DescricaoCompleta: "REPOLHO",
 		DescricaoCupom:    "KG",
+		Page:              1,
+		Limit:             20,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(result) != 2 {
-		t.Fatalf("expected 2 produtos, got %d", len(result))
+	if len(result.Items) != 2 {
+		t.Fatalf("expected 2 produtos, got %d", len(result.Items))
 	}
 
 	cbQuery, ok := codigoBarrasFilter.(bson.M)
@@ -104,7 +106,7 @@ func TestMongoRepositoryListUsesCodigoBarrasToFilterProdutos(t *testing.T) {
 	if callsCodigoBarras != 2 {
 		t.Fatalf("expected 2 barcode queries, got %d", callsCodigoBarras)
 	}
-	if len(result[0].CodigosBarras) == 0 {
+	if len(result.Items[0].CodigosBarras) == 0 {
 		t.Fatal("expected barcode data attached to products")
 	}
 }
@@ -129,12 +131,12 @@ func TestMongoRepositoryListReturnsEmptyWhenCodigoBarrasNotFound(t *testing.T) {
 		codigoBarrasCollectionName: "produtoscodigobarras",
 	}
 
-	result, err := repo.List(context.Background(), ListProdutosFilter{CodigoBarras: "999"})
+	result, err := repo.List(context.Background(), ListProdutosFilter{CodigoBarras: "999", Page: 1, Limit: 20})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(result) != 0 {
-		t.Fatalf("expected empty list, got len=%d", len(result))
+	if len(result.Items) != 0 {
+		t.Fatalf("expected empty list, got len=%d", len(result.Items))
 	}
 	if calledProdutosQuery {
 		t.Fatal("produtos query should not run when barcode lookup returns empty")
@@ -163,7 +165,7 @@ func TestMongoRepositoryListWithoutCodigoBarrasQueriesProdutosDirectly(t *testin
 		codigoBarrasCollectionName: "produtoscodigobarras",
 	}
 
-	_, err := repo.List(context.Background(), ListProdutosFilter{IDLoja: 1})
+	_, err := repo.List(context.Background(), ListProdutosFilter{IDLoja: 1, Page: 1, Limit: 20})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
