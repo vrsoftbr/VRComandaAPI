@@ -48,7 +48,7 @@ func TestServiceListReturnsDefaultParametros(t *testing.T) {
 	if len(result) != len(defaultParametros) {
 		t.Fatalf("expected %d parametros, got %d", len(defaultParametros), len(result))
 	}
-	if result[0].IDParametro != 13 || result[0].IDLoja != 12 || result[0].Valor != "0" {
+	if result[0].IDParametro != 13 || result[0].IDLoja != 12 || result[0].Valor != "1" {
 		t.Fatalf("unexpected first parametro: %+v", result[0])
 	}
 	if result[1].IDParametro != 14 || result[1].Valor != "2" {
@@ -56,6 +56,9 @@ func TestServiceListReturnsDefaultParametros(t *testing.T) {
 	}
 	if result[6].IDParametro != 19 || result[6].Valor != "5" {
 		t.Fatalf("expected mongo value for parametro 19, got %+v", result[6])
+	}
+	if result[7].IDParametro != 227 || result[7].Valor != "1" {
+		t.Fatalf("unexpected parametro 227: %+v", result[7])
 	}
 	if result[len(result)-1].IDParametro != 229 {
 		t.Fatalf("unexpected last parametro: %+v", result[len(result)-1])

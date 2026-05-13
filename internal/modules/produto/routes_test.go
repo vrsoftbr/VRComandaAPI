@@ -27,9 +27,16 @@ func TestRegisterRoutes(t *testing.T) {
 
 		body := utils.DecodeBodyMap(t, w.Body.Bytes())
 		utils.AssertMessageEquals(t, body, "ok")
-		data := utils.AssertDataArray(t, body)
-		if len(data) != 0 {
-			t.Fatalf("expected empty data array, got len=%d", len(data))
+		data, ok := body["data"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected data object, got %T", body["data"])
+		}
+		items, ok := data["items"].([]any)
+		if !ok {
+			t.Fatalf("expected items array, got %T", data["items"])
+		}
+		if len(items) != 0 {
+			t.Fatalf("expected empty items array, got len=%d", len(items))
 		}
 	})
 }
