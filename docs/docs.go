@@ -28,13 +28,13 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID da loja",
-                        "name": "id_loja",
+                        "name": "idLoja",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Codigo",
-                        "name": "codigo",
+                        "description": "ID do atendente",
+                        "name": "idAtendente",
                         "in": "query"
                     },
                     {
@@ -136,7 +136,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID da loja",
-                        "name": "id_loja",
+                        "name": "idLoja",
                         "in": "query"
                     },
                     {
@@ -146,9 +146,19 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Lista de numeros de comanda",
+                        "name": "comandas",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Numero de identificacao",
-                        "name": "numero_identificacao",
+                        "name": "numeroIdentificacao",
                         "in": "query"
                     },
                     {
@@ -622,6 +632,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/lojas": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Loja"
+                ],
+                "summary": "Listar lojas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/loja.LojaResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/mesas": {
             "get": {
                 "produces": [
@@ -635,7 +674,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "ID da loja",
-                        "name": "id_loja",
+                        "name": "idLoja",
                         "in": "query"
                     },
                     {
@@ -645,10 +684,63 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Lista de numeros de mesa",
+                        "name": "mesas",
+                        "in": "query"
+                    },
+                    {
                         "type": "boolean",
                         "description": "Ativo",
                         "name": "ativo",
                         "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/parametros": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Parametros"
+                ],
+                "summary": "Listar parametros da loja",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da loja",
+                        "name": "idLoja",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -709,25 +801,37 @@ const docTemplate = `{
                         "description": "Descricao cupom",
                         "name": "descricaocupom",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Número da página (padrão: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Itens por página (padrão: 20, máximo: 100)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "items, page, limit, total, pages",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Parâmetros inválidos",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Erro interno do servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -823,6 +927,29 @@ const docTemplate = `{
                 },
                 "quantidade": {
                     "type": "number"
+                }
+            }
+        },
+        "loja.LojaResponse": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "type": "integer"
+                },
+                "codigopais": {
+                    "type": "integer"
+                },
+                "descricao": {
+                    "type": "string"
+                },
+                "nomefantasia": {
+                    "type": "string"
+                },
+                "primaria": {
+                    "type": "integer"
+                },
+                "razaosocial": {
+                    "type": "string"
                 }
             }
         }

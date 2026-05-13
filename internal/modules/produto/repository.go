@@ -23,6 +23,9 @@ type Repository interface {
 
 var findAllProdutosCodigoBarrasFn = database.FindAll[ProdutoCodigoBarras]
 var findAllProdutosFn = database.FindAll[Produto]
+var countProdutosFn = func(ctx context.Context, col *mongo.Collection, filter interface{}) (int64, error) {
+	return col.CountDocuments(ctx, filter)
+}
 
 type mongoRepository struct {
 	getDatabase                func() *mongo.Database
@@ -109,7 +112,7 @@ func (r *mongoRepository) List(ctx context.Context, filter ListProdutosFilter) (
 	total := int64(0)
 	var err error
 	if produtosCollection != nil {
-		total, err = produtosCollection.CountDocuments(ctx, produtosQuery)
+		total, err = countProdutosFn(ctx, produtosCollection, produtosQuery)
 		if err != nil {
 			return nil, err
 		}

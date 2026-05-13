@@ -20,8 +20,8 @@ func NewHandler(service Service) *Handler {
 // @Summary Listar atendentes
 // @Tags Atendente
 // @Produce json
-// @Param id_loja query int false "ID da loja"
-// @Param codigo query string false "Codigo"
+// @Param idLoja query int false "ID da loja"
+// @Param idAtendente query string false "ID do atendente"
 // @Param nome query string false "Nome"
 // @Param ativo query bool false "Ativo"
 // @Success 200 {object} map[string]interface{}

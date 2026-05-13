@@ -112,3 +112,59 @@ func TestServiceListPropagatesRepositoryError(t *testing.T) {
 		t.Fatalf("expected nil result on error, got %+v", result)
 	}
 }
+
+func TestServiceListFallsBackToCodigoBarrasLegacy(t *testing.T) {
+	repo := repositoryStub{
+		listFn: func(_ context.Context, _ ListProdutosFilter) (*RepositoryResult, error) {
+			return &RepositoryResult{
+				Items: []Produto{{
+					IDProduto: 1,
+					IDLoja:    1,
+					CodigosBarras: []ProdutoCodigoBarras{{
+						IDProduto:           1,
+						CodigoBarras:        "", // empty → should use legacy
+						CodigoBarrasLegacy:  "LEG123",
+						Embalagem:           "UN",
+						QuantidadeEmbalagem: 1,
+					}},
+				}},
+				Total: 1,
+			}, nil
+		},
+	}
+
+	svc := NewService(repo)
+	raw, err := svc.List(context.Background(), ListProdutosRequest{Page: 1, Limit: 20})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	result := raw.(ProdutosPaginatedResponse)
+	if len(result.Items) != 1 || result.Items[0].CodigoBarras != "LEG123" {
+		t.Fatalf("expected CodigoBarras=LEG123, got %+v", result.Items)
+	}
+}
+
+func TestServiceListWithNoCodigosBarras(t *testing.T) {
+	repo := repositoryStub{
+		listFn: func(_ context.Context, _ ListProdutosFilter) (*RepositoryResult, error) {
+			return &RepositoryResult{
+				Items: []Produto{{
+					IDProduto:     2,
+					IDLoja:        1,
+					CodigosBarras: []ProdutoCodigoBarras{},
+				}},
+				Total: 0,
+			}, nil
+		},
+	}
+
+	svc := NewService(repo)
+	raw, err := svc.List(context.Background(), ListProdutosRequest{Page: 1, Limit: 20})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	result := raw.(ProdutosPaginatedResponse)
+	if len(result.Items) != 1 || result.Items[0].CodigoBarras != "" {
+		t.Fatalf("expected empty CodigoBarras, got %+v", result.Items)
+	}
+}

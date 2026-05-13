@@ -59,6 +59,21 @@ definitions:
       quantidade:
         type: number
     type: object
+  loja.LojaResponse:
+    properties:
+      _id:
+        type: integer
+      codigopais:
+        type: integer
+      descricao:
+        type: string
+      nomefantasia:
+        type: string
+      primaria:
+        type: integer
+      razaosocial:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -71,11 +86,11 @@ paths:
       parameters:
       - description: ID da loja
         in: query
-        name: id_loja
+        name: idLoja
         type: integer
-      - description: Codigo
+      - description: ID do atendente
         in: query
-        name: codigo
+        name: idAtendente
         type: string
       - description: Nome
         in: query
@@ -144,15 +159,22 @@ paths:
       parameters:
       - description: ID da loja
         in: query
-        name: id_loja
+        name: idLoja
         type: integer
       - description: Numero da comanda
         in: query
         name: comanda
         type: integer
+      - collectionFormat: csv
+        description: Lista de numeros de comanda
+        in: query
+        items:
+          type: integer
+        name: comandas
+        type: array
       - description: Numero de identificacao
         in: query
-        name: numero_identificacao
+        name: numeroIdentificacao
         type: string
       - description: Ativo
         in: query
@@ -476,17 +498,43 @@ paths:
       summary: Editar item de lancamento
       tags:
       - Lancamento
+  /lojas:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/loja.LojaResponse'
+            type: array
+        "500":
+          description: Erro interno do servidor
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar lojas
+      tags:
+      - Loja
   /mesas:
     get:
       parameters:
       - description: ID da loja
         in: query
-        name: id_loja
+        name: idLoja
         type: integer
       - description: Numero da mesa
         in: query
         name: mesa
         type: integer
+      - collectionFormat: csv
+        description: Lista de numeros de mesa
+        in: query
+        items:
+          type: integer
+        name: mesas
+        type: array
       - description: Ativo
         in: query
         name: ativo
@@ -512,6 +560,35 @@ paths:
       summary: Listar mesas
       tags:
       - Mesa
+  /parametros:
+    get:
+      parameters:
+      - description: ID da loja
+        in: query
+        name: idLoja
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Listar parametros da loja
+      tags:
+      - Parametros
   /produtos:
     get:
       parameters:
@@ -531,21 +608,29 @@ paths:
         in: query
         name: descricaocupom
         type: string
+      - description: 'Número da página (padrão: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Itens por página (padrão: 20, máximo: 100)'
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: items, page, limit, total, pages
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: Parâmetros inválidos
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Erro interno do servidor
           schema:
             additionalProperties: true
             type: object

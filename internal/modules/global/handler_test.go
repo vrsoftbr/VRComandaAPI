@@ -49,7 +49,7 @@ func TestHandlerGetLancamentosDetalhes(t *testing.T) {
 		r := newGlobalRouter(lancamentosDetalhesServiceStub{}, consultarSituacaoComandaServiceStub{})
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/lancamentos/detalhes?id_loja=abc", nil)
+		req := httptest.NewRequest(http.MethodGet, "/lancamentos/detalhes?idLoja=abc", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusBadRequest {
@@ -94,7 +94,7 @@ func TestHandlerGetLancamentosDetalhes(t *testing.T) {
 		}}, consultarSituacaoComandaServiceStub{})
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/lancamentos/detalhes?id_loja=2&finalizado=true", nil)
+		req := httptest.NewRequest(http.MethodGet, "/lancamentos/detalhes?idLoja=2&finalizado=true", nil)
 		r.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
