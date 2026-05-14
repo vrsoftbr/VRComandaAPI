@@ -26,3 +26,4 @@ go.sum
 
 # Ignore the database file
 data/
+.env
