@@ -1,0 +1,6 @@
+.git
+.github
+.claude
+.env
+*.md
+*_test.go

@@ -1,0 +1,24 @@
+services:
+  vrcomandaapi:
+    build: .
+    container_name: vrcomandaapi
+    restart: unless-stopped
+    ports:
+      - "28232:28232"
+    environment:
+      HTTP_PORT: ":28232"
+      MONGO_URI: "${MONGO_URI:-mongodb://root:root@vrintegrador-db:27017/?directConnection=true&authSource=admin}"
+      MONGO_DATABASE: "${MONGO_DATABASE:-vrcomanda}"
+      SQLITE_PATH: "/app/data/vrcomanda.db"
+    volumes:
+      - vrcomanda_data:/app/data
+    networks:
+      - vr_network
+
+volumes:
+  vrcomanda_data:
+
+networks:
+  vr_network:
+    external: true
+    name: vrintegradormaster_vrintegrador-net
