@@ -33,16 +33,6 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 		return nil, fmt.Errorf("%w: numeroIdentificacaoComanda e obrigatorio", ErrInvalidRequest)
 	}
 
-	lancamentos, err := s.lancamentoService.List(ctx, lancamento.ListLancamentosRequest{
-		IDLoja: req.IDLoja,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if len(lancamentos) == 0 {
-		return nil, nil
-	}
-
 	comandas, err := s.comandaService.List(ctx, comanda.ListComandasRequest{
 		IDLoja:              req.IDLoja,
 		NumeroIdentificacao: req.NumeroIdentificacaoComanda,
@@ -54,21 +44,30 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 		return nil, nil
 	}
 
-	detalheComanda := comandas[0]
+	comanda := comandas[0]
 
-	lancamentosComanda := make([]bool, 0, len(lancamentos))
-	for _, item := range lancamentos {
-		if item.IDComanda == detalheComanda.Comanda {
-			lancamentosComanda = append(lancamentosComanda, item.Finalizado)
-		}
+	lancamentos, err := s.lancamentoService.List(ctx, lancamento.ListLancamentosRequest{
+		IDLoja:    req.IDLoja,
+		IDComanda: comanda.Comanda,
+	})
+
+	if err != nil {
+		return nil, err
 	}
-	if len(lancamentosComanda) == 0 {
-		return nil, nil
+
+	if len(lancamentos) == 0 {
+		return &ConsultarSituacaoComandaResponse{
+			IDLoja:                     req.IDLoja,
+			Comanda:                    comanda.Comanda,
+			NumeroIdentificacaoComanda: comanda.NumeroIdentificacao,
+			Situacao:                   SituacaoComandaLiberada,
+		}, nil
 	}
 
 	situacao := SituacaoComandaLiberada
-	for _, finalizado := range lancamentosComanda {
-		if !finalizado {
+
+	for _, lancamento := range lancamentos {
+		if !lancamento.Finalizado {
 			situacao = SituacaoComandaBloqueada
 			break
 		}
@@ -76,8 +75,8 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 
 	return &ConsultarSituacaoComandaResponse{
 		IDLoja:                     req.IDLoja,
-		Comanda:                    detalheComanda.Comanda,
-		NumeroIdentificacaoComanda: detalheComanda.NumeroIdentificacao,
+		Comanda:                    comanda.Comanda,
+		NumeroIdentificacaoComanda: comanda.NumeroIdentificacao,
 		Situacao:                   situacao,
 	}, nil
 }

@@ -240,6 +240,10 @@ func (s *service) UpdateItem(ctx context.Context, id uint, req UpdateItemRequest
 		}
 	}
 
+	if req.IDSituacao != nil {
+		item.IDSituacao = *req.IDSituacao
+	}
+
 	if err := s.repo.UpdateItem(ctx, item); err != nil {
 		return nil, err
 	}
