@@ -7,8 +7,8 @@ services:
       - "28232:28232"
     environment:
       HTTP_PORT: ":28232"
-      MONGO_URI: "${MONGO_URI:-mongodb://root:root@vrintegrador-db:27017/?directConnection=true&authSource=admin}"
-      MONGO_DATABASE: "${MONGO_DATABASE:-vrcomanda}"
+      MONGO_URI: "mongodb://root:example@vrintegrador-db:26017/?directConnection=true&authSource=admin"
+      MONGO_DATABASE: "pdv"
       SQLITE_PATH: "/app/data/vrcomanda.db"
     volumes:
       - vrcomanda_data:/app/data

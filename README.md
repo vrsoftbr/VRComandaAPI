@@ -4,48 +4,90 @@ API para operação de comandas. Roda em container Docker e se comunica com o Mo
 
 ## Visão Geral
 
-- **Framework:** Go + Gin- **Banco local:** SQLite (lançamentos)
-- **Banco compartilhado:** MongoDB via VRIntegrador
-- **Porta:** `28232` ( verificar qual porta devemos usar quando for pra prod ou entrar em esteira de deploy. )
+- **Framework:** Go + Gin
+- **Banco local:** SQLite (lançamentos)
+- **Banco compartilhado:** MongoDB via VRIntegrador (`pdv`)
+- **Porta:** `28232`
 
-## Configuração
+## Pré-requisitos
 
-### 1. Configure as variáveis de ambiente
+O VRIntegradorMaster precisa estar rodando antes de subir a VRComandaAPI, pois é ele que fornece o MongoDB com os dados do PDV.
 
-Copie o arquivo de exemplo e ajuste se necessário:
+Para subir o VRIntegrador localmente:
 
 ```bash
-.env.example .env
+cd ../VRIntegradorMaster
+docker compose -f docker-compose.local.yml up -d
 ```
 
-Valores padrão do `.env`:
-
-| Variável         | Valor padrão                                                                  | Descrição                       |
-| ---------------- | ----------------------------------------------------------------------------- | ------------------------------- |
-| `HTTP_PORT`      | `:28232`                                                                      | Porta HTTP da API               |
-| `MONGO_URI`      | `mongodb://root:root@localhost:27017/?directConnection=true&authSource=admin` | URI de conexão com o MongoDB    |
-| `MONGO_DATABASE` | `vrcomanda`                                                                   | Nome do banco de dados no Mongo |
-| `SQLITE_PATH`    | `./data/vrcomanda.db`                                                         | Caminho do arquivo SQLite       |
-
-> No container, a `MONGO_URI` aponta para `vrintegrador-db` (hostname interno do Docker, verifique o seu se deve se manter ou não). O `.env` usa `localhost` pra rodar fora do docker.
+Isso vai criar os containers e a rede Docker `vrintegradormaster_vrintegrador-net`, que a VRComandaAPI usa para se comunicar com o MongoDB.
 
 ## Subindo com Docker
 
-### 1. Suba o VRIntegrador (MongoDB)
-
-O MongoDB é provido pelo VRIntegrador. Ele precisa estar rodando antes da VRComandaAPI. É a partir dele que a API vai ler e escrever os dados compartilhados com o PDV.;
-
-### 2. Suba a VRComandaAPI
+Você deve estar na `main` dos dois projetos antes de rodar.
 
 ```bash
 docker compose up -d --build
 ```
 
-### 3. Verifique se subiu
+### Verificando
+
+```bash
+docker logs vrcomandaapi --tail 20
+```
+
+A inicialização correta aparece assim (sem erros de MongoDB):
+
+```
+INFO VRComandaAPI starting port=:28232
+INFO request method=GET path=/health status=200 ...
+```
+
+## Ajustes necessários por ambiente
+
+Os valores do MongoDB estão hardcoded no `docker-compose.yml` (não como variável de ambiente, porque o `.env` sobrepõe os valores quando usado via Docker). Na prática é pra precisar ajustar só a porta mesmo, porque o resto já tá certinho.
+
+### 1. Porta do MongoDB
+
+Abra o `docker-compose.yml` e confira a porta na `MONGO_URI`:
+
+```yaml
+MONGO_URI: "mongodb://root:example@vrintegrador-db:26017/..."
+```
+
+Para confirmar qual porta o seu MongoDB está usando:
 
 ```bash
 docker ps
-docker logs vrcomandaapi
+```
+
+A porta aparece no formato `26017->26017/tcp`. O número da **esquerda** é o que vai na URI. Se for diferente de `26017`, ajuste no `docker-compose.yml`.
+
+### 2. Rede Docker
+
+A VRComandaAPI se conecta à rede externa criada pelo VRIntegradorMaster. O nome dessa rede é gerado a partir do nome da pasta onde o VRIntegradorMaster foi clonado. Para confirmar o nome da rede no seu ambiente:
+
+```bash
+docker network ls
+```
+
+Procure algo que termine com `_vrintegrador-net`. Se for diferente de `vrintegradormaster_vrintegrador-net`, ajuste no `docker-compose.yml`:
+
+```yaml
+networks:
+  vr_network:
+    external: true
+    name: vrintegradormaster_vrintegrador-net  # <- ajustar aqui se necessário
+```
+
+> O host `vrintegrador-db` não precisa ser alterado — ele está fixo como `container_name` no `docker-compose.local.yml` do VRIntegradorMaster, então enquanto todo mundo usar esse compose ele nunca muda.
+
+## Conectando o Front (VRComanda)
+
+No campo **"Endereço IP do servidor"** do front, preencha:
+
+```
+http://localhost:28232
 ```
 
 ## Testando
@@ -56,7 +98,11 @@ docker logs vrcomandaapi
 curl http://localhost:28232/health
 ```
 
-Resposta esperada: `200 OK`
+**Lojas cadastradas:**
+
+```bash
+curl http://localhost:28232/api/v1/lojas
+```
 
 **Swagger UI:**
 
@@ -64,6 +110,23 @@ Resposta esperada: `200 OK`
 http://localhost:28232/swagger/index.html
 ```
 
-##### Rede Docker
+## Configuração do MongoDB (referência)
 
-O container se conecta à rede externa `vrintegradormaster_vrintegrador-net`, criada pelo VRIntegrador. Essa rede precisa existir antes de subir a VRComandaAPI. Deposi podemos trocar por uma variável de ambiente ou algo mais flexível. Se der erro, verifique o nome dessa rede no seu ambiente e ajuste o `docker-compose.yml` ou crie a rede manualmente:
+| Container         | Porta | Usuário | Senha     | Banco |
+| ----------------- | ----- | ------- | --------- | ----- |
+| `vrintegrador-db` | 26017 | `root`  | `example` | `pdv` |
+
+## Variáveis de ambiente (.env)
+
+O arquivo `.env` é usado apenas para rodar a API **fora do Docker** (desenvolvimento local direto com `go run .`). Copie o exemplo:
+
+```bash
+cp .env.example .env
+```
+
+| Variável         | Valor                                                                            | Descrição                         |
+| ---------------- | -------------------------------------------------------------------------------- | --------------------------------- |
+| `HTTP_PORT`      | `:28232`                                                                         | Porta HTTP da API                 |
+| `MONGO_URI`      | `mongodb://root:example@localhost:26017/?directConnection=true&authSource=admin` | URI para rodar fora do Docker     |
+| `MONGO_DATABASE` | `pdv`                                                                            | Nome do banco de dados no MongoDB |
+| `SQLITE_PATH`    | `./data/pdv.db`                                                                  | Caminho do arquivo SQLite         |
