@@ -169,12 +169,8 @@ func TestRepositoryUpdateFinalizadoByLojaComanda(t *testing.T) {
 	}
 	originalAtendente := model.IDAtendente
 
-	updated, err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 2, 20, true)
-	if err != nil {
+	if err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 2, []int{20}, true); err != nil {
 		t.Fatalf("unexpected update finalizado error: %v", err)
-	}
-	if updated.ID != model.ID || !updated.Finalizado {
-		t.Fatalf("unexpected updated model: %+v", updated)
 	}
 
 	found, err := repo.FindByID(context.Background(), model.ID)
@@ -194,7 +190,7 @@ func TestRepositoryUpdateAndListReturnErrorsWithoutTables(t *testing.T) {
 	if err := repo.Update(context.Background(), &models.LancamentoComanda{ID: 1}); err == nil {
 		t.Fatal("expected update error without tables")
 	}
-	if _, err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 1, 1, true); err == nil {
+	if err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 1, []int{1}, true); err == nil {
 		t.Fatal("expected UpdateFinalizadoByLojaComanda error without tables")
 	}
 	if _, err := repo.List(context.Background(), ListLancamentosFilter{}); err == nil {

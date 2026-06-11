@@ -17,7 +17,7 @@ type repositoryStub struct {
 	existsByLojaComandaExcludingIDFn func(ctx context.Context, id uint, idLoja, idComanda int, finalizado bool) (bool, error)
 	findByIDFn                       func(ctx context.Context, id uint) (*models.LancamentoComanda, error)
 	updateFn                         func(ctx context.Context, model *models.LancamentoComanda) error
-	updateFinalizadoByLojaComandaFn  func(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error)
+	updateFinalizadoByLojaComandaFn  func(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error
 	listFn                           func(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error)
 	listItensByComandaFn             func(ctx context.Context, idComanda int) ([]ItemComandaRow, error)
 	createItemsBatchFn               func(ctx context.Context, items []*models.LancamentoComandaItem) error
@@ -61,11 +61,11 @@ func (s repositoryStub) Update(ctx context.Context, model *models.LancamentoComa
 	return nil
 }
 
-func (s repositoryStub) UpdateFinalizadoByLojaComanda(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error) {
+func (s repositoryStub) UpdateFinalizadoByLojaComanda(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error {
 	if s.updateFinalizadoByLojaComandaFn != nil {
 		return s.updateFinalizadoByLojaComandaFn(ctx, idLoja, idComanda, finalizado)
 	}
-	return &models.LancamentoComanda{IDLoja: idLoja, IDComanda: idComanda, Finalizado: finalizado}, nil
+	return nil
 }
 
 func (s repositoryStub) List(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error) {

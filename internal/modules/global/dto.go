@@ -56,9 +56,9 @@ type ConsultarComandaCatracaResponse struct {
 }
 
 type ConsultarComandaPDVRequest struct {
-	NumeroComanda int `form:"numeroComanda"`
-	IDLoja        int `form:"loja"`
-	IDLojaAlias   int `form:"idLoja"`
+	NumeroComanda string `form:"numeroComanda"`
+	IDLoja        int    `form:"loja"`
+	IDLojaAlias   int    `form:"idLoja"`
 }
 
 type ConsultarComandaPDVResponse struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"vrcomandaapi/internal/modules/comanda"
 	"vrcomandaapi/internal/modules/lancamento"
 	"vrcomandaapi/internal/shared/models"
 )
@@ -15,15 +16,15 @@ type ComandaPDVService interface {
 
 type comandaPDVService struct {
 	lancamentoService lancamento.Service
+	comandaService    comanda.Service
 }
 
-func NewComandaPDVService(lancamentoService lancamento.Service) ComandaPDVService {
-	return &comandaPDVService{lancamentoService: lancamentoService}
+func NewComandaPDVService(lancamentoService lancamento.Service, comandaService comanda.Service) ComandaPDVService {
+	return &comandaPDVService{lancamentoService: lancamentoService, comandaService: comandaService}
 }
 
-// Endpoint utilizado pelo PDV para consultar a comanda aberta.
 func (s *comandaPDVService) Consultar(ctx context.Context, req ConsultarComandaPDVRequest) (*ConsultarComandaPDVResponse, error) {
-	if req.NumeroComanda <= 0 {
+	if req.NumeroComanda == "" {
 		return nil, fmt.Errorf("%w: numeroComanda deve ser maior que zero", ErrInvalidRequest)
 	}
 	idLoja := req.IDLoja
@@ -34,10 +35,24 @@ func (s *comandaPDVService) Consultar(ctx context.Context, req ConsultarComandaP
 		return nil, fmt.Errorf("%w: loja deve ser maior que zero", ErrInvalidRequest)
 	}
 
+	comandas, err := s.comandaService.List(ctx, comanda.ListComandasRequest{
+		IDLoja:              idLoja,
+		NumeroIdentificacao: req.NumeroComanda,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if len(comandas) == 0 {
+		return nil, nil
+	}
+
+	comanda := comandas[0]
+
 	finalizado := false
 	lancamentos, err := s.lancamentoService.List(ctx, lancamento.ListLancamentosRequest{
 		IDLoja:     idLoja,
-		IDComanda:  req.NumeroComanda,
+		IDComanda:  comanda.Comanda,
 		Finalizado: &finalizado,
 	})
 	if err != nil {

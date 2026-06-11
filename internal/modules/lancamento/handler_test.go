@@ -18,7 +18,7 @@ import (
 type serviceStub struct {
 	createFn           func(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
 	updateFn           func(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	updateFinalizadoFn func(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error)
+	updateFinalizadoFn func(ctx context.Context, req UpdateFinalizadoRequest) error
 	listFn             func(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
 	listItensFn        func(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
 	createItemsFn      func(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
@@ -39,11 +39,11 @@ func (s serviceStub) Update(ctx context.Context, id uint, req CreateLancamentoRe
 	return nil, nil
 }
 
-func (s serviceStub) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error) {
+func (s serviceStub) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) error {
 	if s.updateFinalizadoFn != nil {
 		return s.updateFinalizadoFn(ctx, req)
 	}
-	return nil, nil
+	return nil
 }
 
 func (s serviceStub) List(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error) {
