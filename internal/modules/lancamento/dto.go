@@ -24,6 +24,7 @@ type ItemComandaResponse struct {
 type UpdateItemRequest struct {
 	Quantidade *float64 `json:"quantidade"`
 	Cancelado  *bool    `json:"cancelado"`
+	IDSituacao *int     `json:"id_situacao"`
 }
 
 type CreateItemRequest struct {
