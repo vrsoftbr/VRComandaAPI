@@ -23,7 +23,7 @@ var ErrComandaFinalizada = errors.New("comanda ja esta finalizada")
 type Service interface {
 	Create(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
 	Update(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error)
+	UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) error
 	List(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
 	ListItens(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
 	CreateItems(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
@@ -144,26 +144,25 @@ func (s *service) Update(ctx context.Context, id uint, req CreateLancamentoReque
 	return model, nil
 }
 
-func (s *service) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error) {
+func (s *service) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) error {
 	if req.IDLoja <= 0 {
-		return nil, fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
+		return fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
 	}
-	if req.IDComanda <= 0 {
-		return nil, fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
+	if req.IDComanda == nil || len(req.IDComanda) == 0 {
+		return fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
 	}
 	if req.Finalizado == nil {
-		return nil, fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
+		return fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
 	}
 
-	model, err := s.repo.UpdateFinalizadoByLojaComanda(ctx, req.IDLoja, req.IDComanda, *req.Finalizado)
-	if err != nil {
+	if err := s.repo.UpdateFinalizadoByLojaComanda(ctx, req.IDLoja, req.IDComanda, *req.Finalizado); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
+			return ErrNotFound
 		}
-		return nil, err
+		return err
 	}
 
-	return model, nil
+	return nil
 }
 
 func (s *service) CreateItems(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error) {

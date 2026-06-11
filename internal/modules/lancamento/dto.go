@@ -28,7 +28,7 @@ type UpdateItemRequest struct {
 
 type UpdateFinalizadoRequest struct {
 	IDLoja     int   `json:"id_loja"`
-	IDComanda  int   `json:"id_comanda"`
+	IDComanda  []int `json:"id_comanda"`
 	Finalizado *bool `json:"finalizado"`
 }
 

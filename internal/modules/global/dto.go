@@ -82,6 +82,6 @@ type ConsultarComandaPDVItemDTO struct {
 
 type AtualizarComandaPDVRequest struct {
 	IDLoja     int   `json:"id_loja" binding:"required"`
-	IDComanda  int   `json:"id_comanda" binding:"required"`
+	IDComanda  []int `json:"id_comanda" binding:"required"`
 	Finalizado *bool `json:"finalizado" binding:"required"`
 }

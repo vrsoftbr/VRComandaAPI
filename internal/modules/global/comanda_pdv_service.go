@@ -81,21 +81,20 @@ func (s *comandaPDVService) Atualizar(ctx context.Context, req AtualizarComandaP
 	if req.IDLoja <= 0 {
 		return nil, fmt.Errorf("%w: id_loja deve ser maior que zero", ErrInvalidRequest)
 	}
-	if req.IDComanda <= 0 {
+	if len(req.IDComanda) == 0 {
 		return nil, fmt.Errorf("%w: id_comanda deve ser maior que zero", ErrInvalidRequest)
 	}
 	if req.Finalizado == nil {
 		return nil, fmt.Errorf("%w: finalizado e obrigatorio", ErrInvalidRequest)
 	}
 
-	result, err := s.lancamentoService.UpdateFinalizado(ctx, lancamento.UpdateFinalizadoRequest{
+	if err := s.lancamentoService.UpdateFinalizado(ctx, lancamento.UpdateFinalizadoRequest{
 		IDLoja:     req.IDLoja,
 		IDComanda:  req.IDComanda,
 		Finalizado: req.Finalizado,
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return nil, nil
 }
