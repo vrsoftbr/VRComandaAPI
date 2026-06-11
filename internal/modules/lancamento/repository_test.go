@@ -148,10 +148,54 @@ func TestRepositoryUpdateAndList(t *testing.T) {
 	}
 }
 
+func TestRepositoryUpdateFinalizadoByLojaComanda(t *testing.T) {
+	repo := newRepositoryForTest(t, true)
+	model := seedLancamento(t, repo, 2, 20, false)
+	if err := repo.CreateItemsBatch(context.Background(), []*models.LancamentoComandaItem{{
+		IDLancamentoComanda: model.ID,
+		Sequencia:           1,
+		IDProduto:           99,
+		Quantidade:          1,
+		PrecoVenda:          10,
+		IDAtendente:         1,
+		IDSituacao:          1,
+	}}); err != nil {
+		t.Fatalf("unexpected CreateItemsBatch error: %v", err)
+	}
+	model.Observacao = "original"
+	model.IDAtendente = 77
+	if err := repo.Update(context.Background(), model); err != nil {
+		t.Fatalf("unexpected setup update error: %v", err)
+	}
+	originalAtendente := model.IDAtendente
+
+	updated, err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 2, 20, true)
+	if err != nil {
+		t.Fatalf("unexpected update finalizado error: %v", err)
+	}
+	if updated.ID != model.ID || !updated.Finalizado {
+		t.Fatalf("unexpected updated model: %+v", updated)
+	}
+
+	found, err := repo.FindByID(context.Background(), model.ID)
+	if err != nil {
+		t.Fatalf("unexpected find error: %v", err)
+	}
+	if !found.Finalizado {
+		t.Fatalf("expected finalizado=true, got %+v", found)
+	}
+	if found.Observacao != "original" || found.IDAtendente != originalAtendente {
+		t.Fatalf("expected only finalizado to change, got %+v", found)
+	}
+}
+
 func TestRepositoryUpdateAndListReturnErrorsWithoutTables(t *testing.T) {
 	repo := newRepositoryForTest(t, false)
 	if err := repo.Update(context.Background(), &models.LancamentoComanda{ID: 1}); err == nil {
 		t.Fatal("expected update error without tables")
+	}
+	if _, err := repo.UpdateFinalizadoByLojaComanda(context.Background(), 1, 1, true); err == nil {
+		t.Fatal("expected UpdateFinalizadoByLojaComanda error without tables")
 	}
 	if _, err := repo.List(context.Background(), ListLancamentosFilter{}); err == nil {
 		t.Fatal("expected list error without tables")

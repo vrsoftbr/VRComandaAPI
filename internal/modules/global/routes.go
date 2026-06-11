@@ -12,8 +12,11 @@ import (
 
 func RegisterRoutes(router gin.IRouter, lancamentoService lancamento.Service, atendenteService atendente.Service, comandaService comanda.Service, mesaService mesa.Service, produtoService produto.Service) {
 	service := NewLancamentosDetalhesService(lancamentoService, atendenteService, comandaService, mesaService, produtoService)
-	consultarSituacaoService := NewConsultarSituacaoComandaService(lancamentoService, comandaService)
-	h := NewHandler(service, consultarSituacaoService)
+	consultarSituacaoService := NewConsultarComandaCatracaService(lancamentoService, comandaService)
+	comandaPDVService := NewComandaPDVService(lancamentoService)
+	h := NewHandler(service, consultarSituacaoService, comandaPDVService)
 	router.GET("/lancamentos/detalhes", h.GetLancamentosDetalhes)
-	router.GET("/comanda/consultarsituacao", h.ConsultarSituacaoComanda)
+	router.GET("/comanda/consultarsituacao", h.ConsultarComandaCatraca)
+	router.GET("/venda/comanda/pdv/consultar", h.ConsultarComandaPDV)
+	router.PUT("/atualizacomanda", h.AtualizarComandaPDV)
 }

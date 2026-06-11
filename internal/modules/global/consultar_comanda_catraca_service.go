@@ -9,23 +9,24 @@ import (
 	"vrcomandaapi/internal/modules/lancamento"
 )
 
-type ConsultarSituacaoComandaService interface {
-	Execute(ctx context.Context, req ConsultarSituacaoComandaRequest) (*ConsultarSituacaoComandaResponse, error)
+type ConsultarComandaCatracaService interface {
+	Execute(ctx context.Context, req ConsultarComandaCatracaRequest) (*ConsultarComandaCatracaResponse, error)
 }
 
-type consultarSituacaoComandaService struct {
+type consultarComandaCatracaService struct {
 	lancamentoService lancamento.Service
 	comandaService    comanda.Service
 }
 
-func NewConsultarSituacaoComandaService(lancamentoService lancamento.Service, comandaService comanda.Service) ConsultarSituacaoComandaService {
-	return &consultarSituacaoComandaService{
+func NewConsultarComandaCatracaService(lancamentoService lancamento.Service, comandaService comanda.Service) ConsultarComandaCatracaService {
+	return &consultarComandaCatracaService{
 		lancamentoService: lancamentoService,
 		comandaService:    comandaService,
 	}
 }
 
-func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req ConsultarSituacaoComandaRequest) (*ConsultarSituacaoComandaResponse, error) {
+// Endpoint utilizado pela aplicação da Catraca
+func (s *consultarComandaCatracaService) Execute(ctx context.Context, req ConsultarComandaCatracaRequest) (*ConsultarComandaCatracaResponse, error) {
 	if req.IDLoja <= 0 {
 		return nil, fmt.Errorf("%w: idLoja deve ser maior que zero", ErrInvalidRequest)
 	}
@@ -74,7 +75,7 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 		}
 	}
 
-	return &ConsultarSituacaoComandaResponse{
+	return &ConsultarComandaCatracaResponse{
 		IDLoja:                     req.IDLoja,
 		Comanda:                    detalheComanda.Comanda,
 		NumeroIdentificacaoComanda: detalheComanda.NumeroIdentificacao,

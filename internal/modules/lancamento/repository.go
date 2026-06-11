@@ -14,6 +14,7 @@ type Repository interface {
 	ExistsByLojaComandaExcludingID(ctx context.Context, id uint, idLoja, idComanda int, finalizado bool) (bool, error)
 	FindByID(ctx context.Context, id uint) (*models.LancamentoComanda, error)
 	Update(ctx context.Context, model *models.LancamentoComanda) error
+	UpdateFinalizadoByLojaComanda(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error)
 	List(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error)
 	ListItensByComanda(ctx context.Context, idComanda int) ([]ItemComandaRow, error)
 	CreateItemsBatch(ctx context.Context, items []*models.LancamentoComandaItem) error
@@ -75,6 +76,24 @@ func (r *repository) FindByID(ctx context.Context, id uint) (*models.LancamentoC
 
 func (r *repository) Update(ctx context.Context, model *models.LancamentoComanda) error {
 	return r.db.WithContext(ctx).Save(model).Error
+}
+
+func (r *repository) UpdateFinalizadoByLojaComanda(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error) {
+	var model models.LancamentoComanda
+	db := r.db.WithContext(ctx)
+	if err := db.
+		Where("id_loja = ? AND id_comanda = ?", idLoja, idComanda).
+		Order("id desc").
+		First(&model).Error; err != nil {
+		return nil, err
+	}
+
+	if err := db.Model(&model).Update("finalizado", finalizado).Error; err != nil {
+		return nil, err
+	}
+	model.Finalizado = finalizado
+
+	return &model, nil
 }
 
 func (r *repository) CreateItemsBatch(ctx context.Context, items []*models.LancamentoComandaItem) error {

@@ -15,7 +15,8 @@ import (
 )
 
 type lancamentoServiceStub struct {
-	listFn func(ctx context.Context, req lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	listFn             func(ctx context.Context, req lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	updateFinalizadoFn func(ctx context.Context, req lancamento.UpdateFinalizadoRequest) (*models.LancamentoComanda, error)
 }
 
 func (s lancamentoServiceStub) Create(ctx context.Context, req lancamento.CreateLancamentoRequest) (*models.LancamentoComanda, error) {
@@ -23,6 +24,13 @@ func (s lancamentoServiceStub) Create(ctx context.Context, req lancamento.Create
 }
 
 func (s lancamentoServiceStub) Update(ctx context.Context, id uint, req lancamento.CreateLancamentoRequest) (*models.LancamentoComanda, error) {
+	return nil, nil
+}
+
+func (s lancamentoServiceStub) UpdateFinalizado(ctx context.Context, req lancamento.UpdateFinalizadoRequest) (*models.LancamentoComanda, error) {
+	if s.updateFinalizadoFn != nil {
+		return s.updateFinalizadoFn(ctx, req)
+	}
 	return nil, nil
 }
 

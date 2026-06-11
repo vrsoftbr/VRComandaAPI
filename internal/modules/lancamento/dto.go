@@ -26,6 +26,12 @@ type UpdateItemRequest struct {
 	Cancelado  *bool    `json:"cancelado"`
 }
 
+type UpdateFinalizadoRequest struct {
+	IDLoja     int   `json:"id_loja"`
+	IDComanda  int   `json:"id_comanda"`
+	Finalizado *bool `json:"finalizado"`
+}
+
 type CreateItemRequest struct {
 	IDLancamentoComanda uint    `json:"id_lancamentocomanda" binding:"required"`
 	Sequencia           int     `json:"sequencia" binding:"required"`

@@ -17,6 +17,7 @@ type repositoryStub struct {
 	existsByLojaComandaExcludingIDFn func(ctx context.Context, id uint, idLoja, idComanda int, finalizado bool) (bool, error)
 	findByIDFn                       func(ctx context.Context, id uint) (*models.LancamentoComanda, error)
 	updateFn                         func(ctx context.Context, model *models.LancamentoComanda) error
+	updateFinalizadoByLojaComandaFn  func(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error)
 	listFn                           func(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error)
 	listItensByComandaFn             func(ctx context.Context, idComanda int) ([]ItemComandaRow, error)
 	createItemsBatchFn               func(ctx context.Context, items []*models.LancamentoComandaItem) error
@@ -58,6 +59,13 @@ func (s repositoryStub) Update(ctx context.Context, model *models.LancamentoComa
 		return s.updateFn(ctx, model)
 	}
 	return nil
+}
+
+func (s repositoryStub) UpdateFinalizadoByLojaComanda(ctx context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error) {
+	if s.updateFinalizadoByLojaComandaFn != nil {
+		return s.updateFinalizadoByLojaComandaFn(ctx, idLoja, idComanda, finalizado)
+	}
+	return &models.LancamentoComanda{IDLoja: idLoja, IDComanda: idComanda, Finalizado: finalizado}, nil
 }
 
 func (s repositoryStub) List(ctx context.Context, filter ListLancamentosFilter) ([]models.LancamentoComanda, error) {
@@ -310,6 +318,69 @@ func TestServiceUpdate(t *testing.T) {
 		model, err := svcOK.Update(context.Background(), 1, req)
 		if err != nil || model == nil || model.IDComanda != req.IDComanda {
 			t.Fatalf("unexpected update result: model=%+v err=%v", model, err)
+		}
+	})
+}
+
+func TestServiceUpdateFinalizado(t *testing.T) {
+	t.Run("validation failures", func(t *testing.T) {
+		finalizado := true
+		cases := []UpdateFinalizadoRequest{
+			{IDComanda: 1, Finalizado: &finalizado},
+			{IDLoja: 1, Finalizado: &finalizado},
+			{IDLoja: 1, IDComanda: 1},
+		}
+
+		svc := NewService(repositoryStub{})
+		for i, req := range cases {
+			_, err := svc.UpdateFinalizado(context.Background(), req)
+			if !errors.Is(err, ErrValidation) {
+				t.Fatalf("case %d expected ErrValidation, got %v", i, err)
+			}
+		}
+	})
+
+	t.Run("maps not found and propagates repository errors", func(t *testing.T) {
+		finalizado := true
+		svcNF := NewService(repositoryStub{updateFinalizadoByLojaComandaFn: func(_ context.Context, _, _ int, _ bool) (*models.LancamentoComanda, error) {
+			return nil, gorm.ErrRecordNotFound
+		}})
+		_, err := svcNF.UpdateFinalizado(context.Background(), UpdateFinalizadoRequest{IDLoja: 1, IDComanda: 2, Finalizado: &finalizado})
+		if !errors.Is(err, ErrNotFound) {
+			t.Fatalf("expected ErrNotFound, got %v", err)
+		}
+
+		repoErr := errors.New("update failed")
+		svcErr := NewService(repositoryStub{updateFinalizadoByLojaComandaFn: func(_ context.Context, _, _ int, _ bool) (*models.LancamentoComanda, error) {
+			return nil, repoErr
+		}})
+		_, err = svcErr.UpdateFinalizado(context.Background(), UpdateFinalizadoRequest{IDLoja: 1, IDComanda: 2, Finalizado: &finalizado})
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected repo error, got %v", err)
+		}
+	})
+
+	t.Run("updates only finalizado through repository", func(t *testing.T) {
+		finalizado := true
+		var capturedIDLoja int
+		var capturedIDComanda int
+		var capturedFinalizado bool
+		svc := NewService(repositoryStub{updateFinalizadoByLojaComandaFn: func(_ context.Context, idLoja, idComanda int, finalizado bool) (*models.LancamentoComanda, error) {
+			capturedIDLoja = idLoja
+			capturedIDComanda = idComanda
+			capturedFinalizado = finalizado
+			return &models.LancamentoComanda{ID: 10, IDLoja: idLoja, IDComanda: idComanda, Finalizado: finalizado}, nil
+		}})
+
+		result, err := svc.UpdateFinalizado(context.Background(), UpdateFinalizadoRequest{IDLoja: 1, IDComanda: 2, Finalizado: &finalizado})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if capturedIDLoja != 1 || capturedIDComanda != 2 || !capturedFinalizado {
+			t.Fatalf("unexpected captured args: loja=%d comanda=%d finalizado=%v", capturedIDLoja, capturedIDComanda, capturedFinalizado)
+		}
+		if result == nil || result.ID != 10 || !result.Finalizado {
+			t.Fatalf("unexpected result: %+v", result)
 		}
 	})
 }

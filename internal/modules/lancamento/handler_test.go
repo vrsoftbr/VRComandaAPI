@@ -16,12 +16,13 @@ import (
 // serviceStub implements Service with configurable function fields.
 // Fields not set default to returning zero values without error.
 type serviceStub struct {
-	createFn      func(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	updateFn      func(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	listFn        func(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
-	listItensFn   func(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
-	createItemsFn func(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
-	updateItemFn  func(ctx context.Context, id uint, req UpdateItemRequest) (*models.LancamentoComandaItem, error)
+	createFn           func(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
+	updateFn           func(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
+	updateFinalizadoFn func(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error)
+	listFn             func(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	listItensFn        func(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
+	createItemsFn      func(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
+	updateItemFn       func(ctx context.Context, id uint, req UpdateItemRequest) (*models.LancamentoComandaItem, error)
 }
 
 func (s serviceStub) Create(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error) {
@@ -34,6 +35,13 @@ func (s serviceStub) Create(ctx context.Context, req CreateLancamentoRequest) (*
 func (s serviceStub) Update(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error) {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, id, req)
+	}
+	return nil, nil
+}
+
+func (s serviceStub) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error) {
+	if s.updateFinalizadoFn != nil {
+		return s.updateFinalizadoFn(ctx, req)
 	}
 	return nil, nil
 }

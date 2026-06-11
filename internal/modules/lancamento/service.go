@@ -23,6 +23,7 @@ var ErrComandaFinalizada = errors.New("comanda ja esta finalizada")
 type Service interface {
 	Create(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
 	Update(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
+	UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error)
 	List(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
 	ListItens(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
 	CreateItems(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
@@ -137,6 +138,28 @@ func (s *service) Update(ctx context.Context, id uint, req CreateLancamentoReque
 	applyLancamentoRequest(model, req, dataHora)
 
 	if err := s.repo.Update(ctx, model); err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+func (s *service) UpdateFinalizado(ctx context.Context, req UpdateFinalizadoRequest) (*models.LancamentoComanda, error) {
+	if req.IDLoja <= 0 {
+		return nil, fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
+	}
+	if req.IDComanda <= 0 {
+		return nil, fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
+	}
+	if req.Finalizado == nil {
+		return nil, fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
+	}
+
+	model, err := s.repo.UpdateFinalizadoByLojaComanda(ctx, req.IDLoja, req.IDComanda, *req.Finalizado)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
