@@ -27,6 +27,7 @@ type Service interface {
 	ListItens(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
 	CreateItems(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
 	UpdateItem(ctx context.Context, id uint, req UpdateItemRequest) (*models.LancamentoComandaItem, error)
+	UpdateLancamentoByPDV(ctx context.Context, req UpdateLancamentoByPDVRequest) error
 }
 
 type service struct {
@@ -276,6 +277,27 @@ func (s *service) ListItens(ctx context.Context, req ListItensRequest) ([]ItemCo
 	}
 
 	return response, nil
+}
+
+func (s *service) UpdateLancamentoByPDV(ctx context.Context, req UpdateLancamentoByPDVRequest) error {
+	if req.IDLoja <= 0 {
+		return fmt.Errorf("%w: id_loja e obrigatorio", ErrValidation)
+	}
+	if len(req.IDComanda) == 0 {
+		return fmt.Errorf("%w: id_comanda e obrigatorio", ErrValidation)
+	}
+	if req.Finalizado == nil {
+		return fmt.Errorf("%w: finalizado e obrigatorio", ErrValidation)
+	}
+
+	if err := s.repo.UpdateLancamentoByPDV(ctx, req.IDLoja, req.IDComanda, *req.Finalizado); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	return nil
 }
 
 func parseDataHora(input string) (time.Time, error) {
