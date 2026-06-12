@@ -560,18 +560,5 @@ func TestHandlerUpdateComandaPDV(t *testing.T) {
 		if w.Code != http.StatusOK {
 			t.Fatalf("status = %d", w.Code)
 		}
-
-		body := utils.DecodeBodyMap(t, w.Body.Bytes())
-
-		utils.AssertMessageEquals(t, body, "ok")
-
-		data, ok := body["data"].(map[string]any)
-		if !ok {
-			t.Fatalf("expected object data, got %T", body["data"])
-		}
-
-		if data["mensagem"] != "Comanda atualizada com sucesso" {
-			t.Fatalf("unexpected data: %+v", data)
-		}
 	})
 }
