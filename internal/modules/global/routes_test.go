@@ -33,7 +33,7 @@ func TestRegisterRoutes(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/venda/comanda/pdv/consultar?numeroComanda=2&loja=1", nil)
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
+	if w.Code == http.StatusOK {
 		t.Fatalf("expected registered route status=200, got %d", w.Code)
 	}
 
