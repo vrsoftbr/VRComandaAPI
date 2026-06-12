@@ -149,5 +149,5 @@ func (h *Handler) UpdateComandaPDV(c *gin.Context) {
 		return
 	}
 
-	utils.RespondOK(c, http.StatusOK, gin.H{"mensagem": "Comanda atualizada com sucesso"})
+	utils.RespondOK(c, http.StatusOK, gin.H{})
 }
