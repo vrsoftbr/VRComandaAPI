@@ -36,6 +36,7 @@ type ListLancamentosDetalhesRequest struct {
 	GlobalFilterRequest
 }
 
+// Usado pela catraca para liberar ou bloquear a comanda
 type SituacaoComanda int
 
 const (
@@ -43,14 +44,44 @@ const (
 	SituacaoComandaBloqueada SituacaoComanda = 2
 )
 
-type ConsultarSituacaoComandaRequest struct {
+type ComandaCatracaRequest struct {
 	IDLoja                     int    `form:"idLoja"`
 	NumeroIdentificacaoComanda string `form:"numeroIdentificacaoComanda"`
 }
 
-type ConsultarSituacaoComandaResponse struct {
+type ComandaCatracaResponse struct {
 	IDLoja                     int             `json:"idLoja"`
 	Comanda                    int             `json:"comanda"`
 	NumeroIdentificacaoComanda string          `json:"numeroIdentificacaoComanda"`
 	Situacao                   SituacaoComanda `json:"situacao"`
+}
+
+type GetLancamentoPDVRequest struct {
+	NumeroComanda int `form:"numeroComanda"`
+	IDLoja        int `form:"loja"`
+}
+
+type GetLancamentoItemPDVResponse struct {
+	CodigoComanda        int                       `json:"codigoComanda"`
+	TipoDocumentoCliente int                       `json:"tipoDocumentoCliente"`
+	DocumentoCliente     string                    `json:"documentoCliente"`
+	NomeCliente          string                    `json:"nomeCliente"`
+	CodigoVendedor       int                       `json:"codigoVendedor"`
+	ValorDescontoVenda   float64                   `json:"valorDescontoVenda"`
+	ValorAcrescimoVenda  float64                   `json:"valorAcrescimoVenda"`
+	Itens                []GetLancamentoPDVItemDTO `json:"itens"`
+}
+
+type GetLancamentoPDVItemDTO struct {
+	CodigoBarras   string  `json:"codigoBarras"`
+	Quantidade     float64 `json:"quantidade"`
+	PrecoVenda     float64 `json:"precoVenda"`
+	ValorDesconto  float64 `json:"valorDesconto"`
+	ValorAcrescimo float64 `json:"valorAcrescimo"`
+}
+
+type UpdadeLancamentoPDVRequest struct {
+	IDLoja     int   `json:"id_loja" binding:"required"`
+	IDComanda  []int `json:"id_comanda" binding:"required"`
+	Finalizado *bool `json:"finalizado" binding:"required"`
 }

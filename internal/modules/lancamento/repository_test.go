@@ -208,18 +208,79 @@ func TestRepositoryItemsMethods(t *testing.T) {
 	}
 }
 
-func TestRepositoryItemsMethodsReturnErrorsWithoutTables(t *testing.T) {
+func TestRepositoryUpdateLancamentoByPDV(t *testing.T) {
+	repo := newRepositoryForTest(t, true)
+
+	model1 := seedLancamento(t, repo, 2, 20, false)
+	model2 := seedLancamento(t, repo, 2, 21, false)
+
+	model1.Observacao = "original-1"
+	model1.IDAtendente = 77
+
+	model2.Observacao = "original-2"
+	model2.IDAtendente = 88
+
+	if err := repo.Update(context.Background(), model1); err != nil {
+		t.Fatalf("unexpected setup update error: %v", err)
+	}
+
+	if err := repo.Update(context.Background(), model2); err != nil {
+		t.Fatalf("unexpected setup update error: %v", err)
+	}
+
+	if err := repo.UpdateLancamentoByPDV(
+		context.Background(),
+		2,
+		[]int{20, 21},
+		true,
+	); err != nil {
+		t.Fatalf("unexpected update finalizado error: %v", err)
+	}
+
+	found1, err := repo.FindByID(context.Background(), model1.ID)
+	if err != nil {
+		t.Fatalf("unexpected find error: %v", err)
+	}
+
+	found2, err := repo.FindByID(context.Background(), model2.ID)
+	if err != nil {
+		t.Fatalf("unexpected find error: %v", err)
+	}
+
+	if !found1.Finalizado {
+		t.Fatalf("expected comanda 20 finalized, got %+v", found1)
+	}
+
+	if !found2.Finalizado {
+		t.Fatalf("expected comanda 21 finalized, got %+v", found2)
+	}
+
+	if found1.Observacao != "original-1" || found1.IDAtendente != 77 {
+		t.Fatalf("expected only finalizado to change, got %+v", found1)
+	}
+
+	if found2.Observacao != "original-2" || found2.IDAtendente != 88 {
+		t.Fatalf("expected only finalizado to change, got %+v", found2)
+	}
+}
+
+func TestRepositoryUpdateAndListReturnErrorsWithoutMesas(t *testing.T) {
 	repo := newRepositoryForTest(t, false)
-	if err := repo.CreateItemsBatch(context.Background(), []*models.LancamentoComandaItem{{IDLancamentoComanda: 1, Sequencia: 1, IDProduto: 1, Quantidade: 1, IDAtendente: 1}}); err == nil {
-		t.Fatal("expected CreateItemsBatch error without tables")
+
+	if err := repo.Update(context.Background(), &models.LancamentoComanda{ID: 1}); err == nil {
+		t.Fatal("expected update error without tables")
 	}
-	if _, err := repo.SequenciaExistsInLancamento(context.Background(), 1, 1); err == nil {
-		t.Fatal("expected SequenciaExistsInLancamento error without tables")
+
+	if err := repo.UpdateLancamentoByPDV(
+		context.Background(),
+		1,
+		[]int{1},
+		true,
+	); err == nil {
+		t.Fatal("expected UpdateLancamentoByPDV error without tables")
 	}
-	if err := repo.UpdateItem(context.Background(), &models.LancamentoComandaItem{ID: 1}); err == nil {
-		t.Fatal("expected UpdateItem error without tables")
-	}
-	if _, err := repo.ListItensByComanda(context.Background(), 1); err == nil {
-		t.Fatal("expected ListItensByComanda error without tables")
+
+	if _, err := repo.List(context.Background(), ListLancamentosFilter{}); err == nil {
+		t.Fatal("expected list error without tables")
 	}
 }

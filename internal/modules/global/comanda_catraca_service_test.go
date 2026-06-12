@@ -10,33 +10,33 @@ import (
 	"vrcomandaapi/internal/shared/models"
 )
 
-func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
+func TestComandaCatracaServiceExecute(t *testing.T) {
 	t.Run("returns invalid request when idLoja is invalid", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(lancamentoServiceStub{}, comandaServiceStub{})
+		svc := NewComandaCatracaService(lancamentoServiceStub{}, comandaServiceStub{})
 
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 0, NumeroIdentificacaoComanda: "100"})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 0, NumeroIdentificacaoComanda: "100"})
 		if err == nil || !errors.Is(err, ErrInvalidRequest) {
 			t.Fatalf("expected ErrInvalidRequest, got %v", err)
 		}
 	})
 
 	t.Run("returns invalid request when numeroIdentificacaoComanda is empty", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(lancamentoServiceStub{}, comandaServiceStub{})
+		svc := NewComandaCatracaService(lancamentoServiceStub{}, comandaServiceStub{})
 
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "  "})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "  "})
 		if err == nil || !errors.Is(err, ErrInvalidRequest) {
 			t.Fatalf("expected ErrInvalidRequest, got %v", err)
 		}
 	})
 
 	t.Run("returns nil when comanda does not exist", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{},
 			comandaServiceStub{listFn: func(_ context.Context, _ comanda.ListComandasRequest) ([]comanda.ComandaResponse, error) {
 				return nil, nil
 			}},
 		)
-		res, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
+		res, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -46,7 +46,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 	})
 
 	t.Run("returns liberada when comanda has no lancamentos", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return nil, nil
 			}},
@@ -54,7 +54,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 				return []comanda.ComandaResponse{{IDLoja: 1, Comanda: 115, NumeroIdentificacao: "1000000001159"}}, nil
 			}},
 		)
-		res, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
+		res, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -64,7 +64,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 	})
 
 	t.Run("returns bloqueada when any lancamento is not finalized", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, req lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return []models.LancamentoComanda{{ID: 1, IDComanda: 115, Finalizado: false}, {ID: 2, IDComanda: 115, Finalizado: true}}, nil
 			}},
@@ -72,7 +72,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 				return []comanda.ComandaResponse{{IDLoja: 1, Comanda: 115, NumeroIdentificacao: "1000000001159"}}, nil
 			}},
 		)
-		res, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
+		res, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -82,7 +82,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 	})
 
 	t.Run("returns released when all lancamentos are finalized", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return []models.LancamentoComanda{{ID: 1, IDComanda: 115, Finalizado: true}, {ID: 2, IDComanda: 115, Finalizado: true}}, nil
 			}},
@@ -91,7 +91,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 			}},
 		)
 
-		res, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
+		res, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -101,7 +101,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 	})
 
 	t.Run("returns liberada when all lancamentos are finalizados", func(t *testing.T) {
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return []models.LancamentoComanda{{ID: 1, IDComanda: 115, Finalizado: true}, {ID: 2, IDComanda: 115, Finalizado: true}}, nil
 			}},
@@ -109,7 +109,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 				return []comanda.ComandaResponse{{IDLoja: 1, Comanda: 115, NumeroIdentificacao: "1000000001159"}}, nil
 			}},
 		)
-		res, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
+		res, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -119,13 +119,13 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 	})
 	t.Run("returns error when comanda service fails", func(t *testing.T) {
 		expectedErr := errors.New("comanda service failed")
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{},
 			comandaServiceStub{listFn: func(_ context.Context, _ comanda.ListComandasRequest) ([]comanda.ComandaResponse, error) {
 				return nil, expectedErr
 			}},
 		)
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
 		if err == nil || err.Error() != expectedErr.Error() {
 			t.Fatalf("expected error %v, got %v", expectedErr, err)
 		}
@@ -133,7 +133,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 
 	t.Run("returns error when lancamento service fails", func(t *testing.T) {
 		expectedErr := errors.New("lancamento service failed")
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return nil, expectedErr
 			}},
@@ -141,7 +141,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 				return []comanda.ComandaResponse{{IDLoja: 1, Comanda: 115, NumeroIdentificacao: "1000000001159"}}, nil
 			}},
 		)
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "1000000001159"})
 		if err == nil || err.Error() != expectedErr.Error() {
 			t.Fatalf("expected error %v, got %v", expectedErr, err)
 		}
@@ -149,7 +149,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 
 	t.Run("propagates lancamento service error", func(t *testing.T) {
 		expectedErr := errors.New("lancamento service failed")
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return nil, expectedErr
 			}},
@@ -158,7 +158,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 			}},
 		)
 
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
 		if err == nil || err.Error() != expectedErr.Error() {
 			t.Fatalf("expected error %v, got %v", expectedErr, err)
 		}
@@ -166,7 +166,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 
 	t.Run("propagates comanda service error", func(t *testing.T) {
 		expectedErr := errors.New("comanda service failed")
-		svc := NewConsultarSituacaoComandaService(
+		svc := NewComandaCatracaService(
 			lancamentoServiceStub{listFn: func(_ context.Context, _ lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error) {
 				return []models.LancamentoComanda{{ID: 1, IDComanda: 115, Finalizado: false}}, nil
 			}},
@@ -175,7 +175,7 @@ func TestConsultarSituacaoComandaServiceExecute(t *testing.T) {
 			}},
 		)
 
-		_, err := svc.Execute(context.Background(), ConsultarSituacaoComandaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
+		_, err := svc.Execute(context.Background(), ComandaCatracaRequest{IDLoja: 1, NumeroIdentificacaoComanda: "100"})
 		if err == nil || err.Error() != expectedErr.Error() {
 			t.Fatalf("expected error %v, got %v", expectedErr, err)
 		}

@@ -71,3 +71,9 @@ type ListLancamentosFilter struct {
 	DataHora    *time.Time
 	Finalizado  *bool
 }
+
+type UpdateLancamentoByPDVRequest struct {
+	IDLoja     int   `json:"id_loja"`
+	IDComanda  []int `json:"id_comanda"`
+	Finalizado *bool `json:"finalizado"`
+}

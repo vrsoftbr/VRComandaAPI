@@ -23,6 +23,7 @@ type repositoryStub struct {
 	sequenciaExistsInLancamentoFn    func(ctx context.Context, idLancamento uint, sequencia int) (bool, error)
 	findItemByIDFn                   func(ctx context.Context, id uint) (*models.LancamentoComandaItem, error)
 	updateItemFn                     func(ctx context.Context, item *models.LancamentoComandaItem) error
+	updateLancamentoByPDVFn          func(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error
 }
 
 func (s repositoryStub) Create(ctx context.Context, model *models.LancamentoComanda) error {
@@ -98,6 +99,13 @@ func (s repositoryStub) FindItemByID(ctx context.Context, id uint) (*models.Lanc
 func (s repositoryStub) UpdateItem(ctx context.Context, item *models.LancamentoComandaItem) error {
 	if s.updateItemFn != nil {
 		return s.updateItemFn(ctx, item)
+	}
+	return nil
+}
+
+func (s repositoryStub) UpdateLancamentoByPDV(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error {
+	if s.updateLancamentoByPDVFn != nil {
+		return s.updateLancamentoByPDVFn(ctx, idLoja, idComanda, finalizado)
 	}
 	return nil
 }
@@ -593,4 +601,131 @@ func TestParseDataHora(t *testing.T) {
 	if _, err := parseDataHora("invalid"); err == nil {
 		t.Fatal("expected parse error for invalid date")
 	}
+}
+func TestServiceUpdateLancamentoByPDV(t *testing.T) {
+	t.Run("validation failures", func(t *testing.T) {
+		finalizado := true
+
+		cases := []UpdateLancamentoByPDVRequest{
+			{IDComanda: []int{1}, Finalizado: &finalizado},
+			{IDLoja: 1, Finalizado: &finalizado},
+			{IDLoja: 1, IDComanda: []int{1}},
+		}
+
+		svc := NewService(repositoryStub{})
+
+		for i, req := range cases {
+			err := svc.UpdateLancamentoByPDV(context.Background(), req)
+
+			if !errors.Is(err, ErrValidation) {
+				t.Fatalf("case %d expected ErrValidation, got %v", i, err)
+			}
+		}
+	})
+
+	t.Run("maps not found", func(t *testing.T) {
+		finalizado := true
+
+		svc := NewService(repositoryStub{
+			updateLancamentoByPDVFn: func(
+				_ context.Context,
+				_ int,
+				_ []int,
+				_ bool,
+			) error {
+				return gorm.ErrRecordNotFound
+			},
+		})
+
+		err := svc.UpdateLancamentoByPDV(
+			context.Background(),
+			UpdateLancamentoByPDVRequest{
+				IDLoja:     1,
+				IDComanda:  []int{2},
+				Finalizado: &finalizado,
+			},
+		)
+
+		if !errors.Is(err, ErrNotFound) {
+			t.Fatalf("expected ErrNotFound, got %v", err)
+		}
+	})
+
+	t.Run("propagates repository errors", func(t *testing.T) {
+		finalizado := true
+		repoErr := errors.New("update failed")
+
+		svc := NewService(repositoryStub{
+			updateLancamentoByPDVFn: func(
+				_ context.Context,
+				_ int,
+				_ []int,
+				_ bool,
+			) error {
+				return repoErr
+			},
+		})
+
+		err := svc.UpdateLancamentoByPDV(
+			context.Background(),
+			UpdateLancamentoByPDVRequest{
+				IDLoja:     1,
+				IDComanda:  []int{2},
+				Finalizado: &finalizado,
+			},
+		)
+
+		if !errors.Is(err, repoErr) {
+			t.Fatalf("expected repo error, got %v", err)
+		}
+	})
+
+	t.Run("updates finalizado successfully", func(t *testing.T) {
+		finalizado := true
+
+		var capturedIDLoja int
+		var capturedIDComanda []int
+		var capturedFinalizado bool
+
+		svc := NewService(repositoryStub{
+			updateLancamentoByPDVFn: func(
+				_ context.Context,
+				idLoja int,
+				idComanda []int,
+				finalizado bool,
+			) error {
+				capturedIDLoja = idLoja
+				capturedIDComanda = idComanda
+				capturedFinalizado = finalizado
+				return nil
+			},
+		})
+
+		err := svc.UpdateLancamentoByPDV(
+			context.Background(),
+			UpdateLancamentoByPDVRequest{
+				IDLoja:     1,
+				IDComanda:  []int{2, 3},
+				Finalizado: &finalizado,
+			},
+		)
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if capturedIDLoja != 1 {
+			t.Fatalf("expected loja=1, got %d", capturedIDLoja)
+		}
+
+		if len(capturedIDComanda) != 2 ||
+			capturedIDComanda[0] != 2 ||
+			capturedIDComanda[1] != 3 {
+			t.Fatalf("unexpected comandas: %+v", capturedIDComanda)
+		}
+
+		if !capturedFinalizado {
+			t.Fatalf("expected finalizado=true")
+		}
+	})
 }
