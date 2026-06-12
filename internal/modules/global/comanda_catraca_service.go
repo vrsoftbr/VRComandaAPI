@@ -9,23 +9,23 @@ import (
 	"vrcomandaapi/internal/modules/lancamento"
 )
 
-type ConsultarSituacaoComandaService interface {
-	Execute(ctx context.Context, req ConsultarSituacaoComandaRequest) (*ConsultarSituacaoComandaResponse, error)
+type ComandaCatracaService interface {
+	Execute(ctx context.Context, req ComandaCatracaRequest) (*ComandaCatracaResponse, error)
 }
 
-type consultarSituacaoComandaService struct {
+type comandaCatracaService struct {
 	lancamentoService lancamento.Service
 	comandaService    comanda.Service
 }
 
-func NewConsultarSituacaoComandaService(lancamentoService lancamento.Service, comandaService comanda.Service) ConsultarSituacaoComandaService {
-	return &consultarSituacaoComandaService{
+func NewComandaCatracaService(lancamentoService lancamento.Service, comandaService comanda.Service) ComandaCatracaService {
+	return &comandaCatracaService{
 		lancamentoService: lancamentoService,
 		comandaService:    comandaService,
 	}
 }
 
-func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req ConsultarSituacaoComandaRequest) (*ConsultarSituacaoComandaResponse, error) {
+func (s *comandaCatracaService) Execute(ctx context.Context, req ComandaCatracaRequest) (*ComandaCatracaResponse, error) {
 	if req.IDLoja <= 0 {
 		return nil, fmt.Errorf("%w: idLoja deve ser maior que zero", ErrInvalidRequest)
 	}
@@ -56,7 +56,7 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 	}
 
 	if len(lancamentos) == 0 {
-		return &ConsultarSituacaoComandaResponse{
+		return &ComandaCatracaResponse{
 			IDLoja:                     req.IDLoja,
 			Comanda:                    comanda.Comanda,
 			NumeroIdentificacaoComanda: comanda.NumeroIdentificacao,
@@ -73,7 +73,7 @@ func (s *consultarSituacaoComandaService) Execute(ctx context.Context, req Consu
 		}
 	}
 
-	return &ConsultarSituacaoComandaResponse{
+	return &ComandaCatracaResponse{
 		IDLoja:                     req.IDLoja,
 		Comanda:                    comanda.Comanda,
 		NumeroIdentificacaoComanda: comanda.NumeroIdentificacao,

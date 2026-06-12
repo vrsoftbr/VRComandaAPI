@@ -16,12 +16,13 @@ import (
 // serviceStub implements Service with configurable function fields.
 // Fields not set default to returning zero values without error.
 type serviceStub struct {
-	createFn      func(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	updateFn      func(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
-	listFn        func(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
-	listItensFn   func(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
-	createItemsFn func(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
-	updateItemFn  func(ctx context.Context, id uint, req UpdateItemRequest) (*models.LancamentoComandaItem, error)
+	createFn                func(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
+	updateFn                func(ctx context.Context, id uint, req CreateLancamentoRequest) (*models.LancamentoComanda, error)
+	listFn                  func(ctx context.Context, req ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	listItensFn             func(ctx context.Context, req ListItensRequest) ([]ItemComandaResponse, error)
+	createItemsFn           func(ctx context.Context, req CreateItemsRequest) ([]*models.LancamentoComandaItem, error)
+	updateItemFn            func(ctx context.Context, id uint, req UpdateItemRequest) (*models.LancamentoComandaItem, error)
+	updateLancamentoByPDVFn func(ctx context.Context, req UpdateLancamentoByPDVRequest) error
 }
 
 func (s serviceStub) Create(ctx context.Context, req CreateLancamentoRequest) (*models.LancamentoComanda, error) {
@@ -64,6 +65,13 @@ func (s serviceStub) UpdateItem(ctx context.Context, id uint, req UpdateItemRequ
 		return s.updateItemFn(ctx, id, req)
 	}
 	return nil, nil
+}
+
+func (s serviceStub) UpdateLancamentoByPDV(ctx context.Context, req UpdateLancamentoByPDVRequest) error {
+	if s.updateLancamentoByPDVFn != nil {
+		return s.updateLancamentoByPDVFn(ctx, req)
+	}
+	return nil
 }
 
 func newRouter(svc Service) *gin.Engine {

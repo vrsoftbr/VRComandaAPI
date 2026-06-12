@@ -15,7 +15,8 @@ import (
 )
 
 type lancamentoServiceStub struct {
-	listFn func(ctx context.Context, req lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	listFn                  func(ctx context.Context, req lancamento.ListLancamentosRequest) ([]models.LancamentoComanda, error)
+	updateLancamentoByPDVFn func(ctx context.Context, req lancamento.UpdateLancamentoByPDVRequest) error
 }
 
 func (s lancamentoServiceStub) Create(ctx context.Context, req lancamento.CreateLancamentoRequest) (*models.LancamentoComanda, error) {
@@ -43,6 +44,15 @@ func (s lancamentoServiceStub) CreateItems(ctx context.Context, req lancamento.C
 
 func (s lancamentoServiceStub) UpdateItem(ctx context.Context, id uint, req lancamento.UpdateItemRequest) (*models.LancamentoComandaItem, error) {
 	return nil, nil
+}
+
+// UpdateLancamentoByPDV implements lancamento.Service.
+func (s lancamentoServiceStub) UpdateLancamentoByPDV(ctx context.Context, req lancamento.UpdateLancamentoByPDVRequest) error {
+	if s.updateLancamentoByPDVFn != nil {
+		return s.updateLancamentoByPDVFn(ctx, req)
+	}
+
+	return nil
 }
 
 type comandaServiceStub struct {

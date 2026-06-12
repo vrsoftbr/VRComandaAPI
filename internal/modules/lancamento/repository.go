@@ -20,6 +20,7 @@ type Repository interface {
 	SequenciaExistsInLancamento(ctx context.Context, idLancamento uint, sequencia int) (bool, error)
 	FindItemByID(ctx context.Context, id uint) (*models.LancamentoComandaItem, error)
 	UpdateItem(ctx context.Context, item *models.LancamentoComandaItem) error
+	UpdateLancamentoByPDV(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error
 }
 
 type ItemComandaRow struct {
@@ -75,6 +76,29 @@ func (r *repository) FindByID(ctx context.Context, id uint) (*models.LancamentoC
 
 func (r *repository) Update(ctx context.Context, model *models.LancamentoComanda) error {
 	return r.db.WithContext(ctx).Save(model).Error
+}
+
+func (r *repository) UpdateLancamentoByPDV(ctx context.Context, idLoja int, idComanda []int, finalizado bool) error {
+	db := r.db.WithContext(ctx)
+
+	for _, id := range idComanda {
+		var model models.LancamentoComanda
+
+		if err := db.
+			Where("id_loja = ? AND id_comanda = ?", idLoja, id).
+			Order("id DESC").
+			First(&model).Error; err != nil {
+			return err
+		}
+
+		if err := db.
+			Model(&model).
+			Update("finalizado", finalizado).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *repository) CreateItemsBatch(ctx context.Context, items []*models.LancamentoComandaItem) error {
